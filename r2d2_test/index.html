@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>R2D2 Test</title>
+	<meta charset="utf-8">
+</head>
+<body style="margin: 0;">
+
+  <script src="js/three.min.js"></script>
+  <script src="js/OrbitControls.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+
+
+	<script type="x-shader/x-vertex" id="vertexshader">
+
+		// switch on high precision floats
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+
+		void main()
+		{
+			/*gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);*/
+
+			mat4 trans = mat4
+			(  1.0,  0.0,  0.0, 0.0,
+				0.0,  1.0,  0.0, 0.0,
+				0.0,  0.0,  1.0, 0.0,
+				0.0,  0.0,  0.0, 1.0 );
+			
+			mat4 scale = mat4
+			(  -0.05,  0.0,  0.0, 0.0,
+				0.0,  -0.05,  0.0, 0.0,
+				0.0,  0.0,  -0.05, 0.0,
+				0.0,  0.0,  0.0, 1.0 );
+
+			vec4 modelViewPosition =  modelViewMatrix*scale*trans*vec4(position,1.0);  
+		
+			gl_Position = projectionMatrix * modelViewPosition;
+
+		}
+
+	</script>
+
+	<script type="x-shader/x-fragment" id="fragmentshader">
+
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+
+		void main()
+		{
+			gl_FragColor 	= vec4(1.0,1.0,1.0,1.0);
+		}
+
+	</script>
+	
+
+	<script>
+		// Set up the scene, camera, and renderer as global variables.
+		var scene, camera, renderer;
+
+		init();
+		animate();
+
+
+		// Sets up the scene.
+		function init() {
+
+			// Create the scene and set the scene size.
+			scene = new THREE.Scene();
+			var WIDTH = window.innerWidth,
+				HEIGHT = window.innerHeight;
+
+			// Create a renderer and add it to the DOM.
+			renderer = new THREE.WebGLRenderer({antialias:true});
+			renderer.setSize(WIDTH, HEIGHT);
+			document.body.appendChild(renderer.domElement);
+
+			// Create a camera, zoom it out from the model a bit, and add it to the scene.
+			camera = new THREE.PerspectiveCamera(45, WIDTH / HEIGHT, 0.1, 20000);
+			camera.position.set(100,100,100);
+			scene.add(camera);
+
+			// Create an event listener that resizes the renderer with the browser window.
+			window.addEventListener('resize', function() {
+			var WIDTH = window.innerWidth,
+				HEIGHT = window.innerHeight;
+			renderer.setSize(WIDTH, HEIGHT);
+			camera.aspect = WIDTH / HEIGHT;
+			camera.updateProjectionMatrix();
+			});
+
+			// Set the background color of the scene.
+			renderer.setClearColorHex(0x333F47, 1);
+
+			// Create a light, set its position, and add it to the scene.
+			var light = new THREE.PointLight(0xffffff);
+			light.position.set(100,100,100);
+			scene.add(light);
+
+			var uniforms = {  
+			myColor: { type: "c", value: new THREE.Color( 0xffffff ) },
+			};
+			
+			shaderMaterial = new THREE.ShaderMaterial( {
+				uniforms: uniforms,  				
+				vertexShader: document.getElementById( 'vertexshader' ).textContent,
+				fragmentShader: document.getElementById( 'fragmentshader' ).textContent
+
+			} );
+
+			var objectLoader = new THREE.ObjectLoader();
+			// Initiate load of model
+			objectLoader.load("models/R2D2/r2-d2.json", function(obj) {
+				// obj will be an Object3D, so we must traverse it's children and add the material
+				obj.traverse(function(child) {
+					if(child instanceof THREE.ShaderMaterial) {
+						child.material = shaderMaterial;
+					}
+				})
+
+				/*obj.position.x = 0;
+				obj.position.y = 0;
+				obj.position.z = 0;
+				obj.scale.set(0.2,0.2,0.2);*/
+				
+				scene.add(obj);
+
+				});
+			
+
+			// Add OrbitControls so that we can pan around with the mouse.
+			controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+		}
+
+		// Renders the scene and updates the render as needed.
+		function animate() {
+
+			requestAnimationFrame(animate);
+			
+			// Render the scene.
+			renderer.render(scene, camera);
+			controls.update();
+
+		}
+
+	</script>
+
+</body>
+</html>
