@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>Summoning a wolf</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<script src="lib/three.js"></script>
+	<script src='js/init.js'></script>
+	<script src='js/model.js'></script>
+	<script src="lib/OBJLoader.js"></script>
+	<script src="lib/initShaders.js"></script>
+	<script src="lib/webgl-utils.js"></script>
+	<script src="lib/MV.js"></script>
+	<script type="x-shader/x-vertex" id="vertexShader">  
+		//Vertex shader simples, apenas aplica uma rotação no eixo y,
+		//além de setar posição e cor. 
+		attribute  vec4 vPosition;
+		attribute  vec4 vColor;
+		varying vec4 fColor;
+		uniform vec3 theta;
+		
+		void main(){
+			vec3 angle = radians(theta);
+			vec3 c = cos(angle);
+			vec3 s = sin(angle);
+			
+			mat4 ry = mat4(
+				c.y, 0.0, -s.y, 0.0,
+				0.0, 1.0,  0.0, 0.0,
+				s.y, 0.0,  c.y, 0.0,
+				0.0, 0.0,  0.0, 1.0 
+			);
+			fColor = vColor;
+			gl_Position = ry * vPosition;
+		} 
+	</script>
+	<script type="x-shader/x-fragment" id="fragmentShader"> 
+		//Fragment shader mais simples ainda, apenas recebe a cor do vertex,
+		//definindo assim a cor dos fragmentos.
+		precision mediump float;
+		
+		varying vec4 fColor;
+
+		void main(){
+			gl_FragColor = fColor;
+		}
+	</script>
+	<body>
+		<canvas id='gl-canvas'></canvas>
+	</body>
+	<script>
+		/**
+		 * Usa o loader instânceado em model.js para carregar o .obj
+		 * Chama a normalização para deixar os pontos no volume de visão.
+		 * Constrói um array de pontos de cor para coloração do objeto.
+		 * Chama init de init.js que vai fazer a mágica acontecer
+		 */
+		let points;
+		let colors;
+		loader.load("../models/simple/wolf.obj", data => {
+			points = _normalize(data);
+			let size = 0.2 / points.length;
+			let color = 0;
+			colors = points.map(item => [ 0.83 - color, 0.82 - color, 0.65 - (color += size) - size, 1]);
+			init();
+		});	
+	</script>
+</html>
