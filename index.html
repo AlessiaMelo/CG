@@ -2,15 +2,15 @@
 <html>
 	<head>
 		<meta charset=utf-8>
-		<title>Summoning a wolf</title>
+		<title>Just an Object</title>
 		<style>
 			body { margin: 0; }
 			canvas { width: 100%; height: 100% }
 		</style>
 	</head>
 	<script src="lib/three.js"></script>
-	<script src='js/init.js'></script>
 	<script src='js/model.js'></script>
+	<script src='js/init.js'></script>
 	<script src="lib/OBJLoader.js"></script>
 	<script src="lib/initShaders.js"></script>
 	<script src="lib/webgl-utils.js"></script>
@@ -52,21 +52,4 @@
 	<body>
 		<canvas id='gl-canvas'></canvas>
 	</body>
-	<script>
-		/**
-		 * Usa o loader instânceado em model.js para carregar o .obj
-		 * Chama a normalização para deixar os pontos no volume de visão.
-		 * Constrói um array de pontos de cor para coloração do objeto.
-		 * Chama init de init.js que vai fazer a mágica acontecer
-		 */
-		let points;
-		let colors;
-		loader.load("../models/simple/wolf.obj", data => {
-			points = _normalize(data);
-			let size = 0.2 / points.length;
-			let color = 0;
-			colors = points.map(item => [ 0.83 - color, 0.82 - color, 0.65 - (color += size) - size, 1]);
-			init();
-		});	
-	</script>
 </html>

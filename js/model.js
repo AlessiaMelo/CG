@@ -38,7 +38,7 @@ function findExtremes(obj, key, point, _function){
  * @param {string} data 
  */
 function _normalize(data){
-    let meshInformation = data.split('\n').reduce((current, line) => {
+    let vInfo = data.split('\n').reduce((current, line) => {
         line_parts = line.split(' ').map(content => content.split('/')[0]).filter(nonEmpty => nonEmpty != "");
 
         let _x = Number(line_parts[1]);
@@ -57,23 +57,38 @@ function _normalize(data){
         return current;
     }, {points : [], vertices : []});
 
-    let maxVec = new THREE.Vector4(meshInformation.max.x, meshInformation.max.y, meshInformation.max.z, 1);
-    let minVec = new THREE.Vector4(meshInformation.min.x, meshInformation.min.y, meshInformation.min.z, 1);
+    let maxVec = new THREE.Vector4(vInfo.max.x, vInfo.max.y, vInfo.max.z, 1);
+    let minVec = new THREE.Vector4(vInfo.min.x, vInfo.min.y, vInfo.min.z, 1);
     let medianPoint = new THREE.Vector4().addVectors(maxVec, minVec).multiplyScalar(0.5);
     let scaling = 1.5 / (new THREE.Vector4().subVectors(maxVec, minVec).length());
     
-    meshInformation.vertices.forEach((value, index) => {
-        meshInformation.vertices[index].subVectors(value, medianPoint).multiplyScalar(scaling);
-        meshInformation.vertices[index].w = 1;
+    vInfo.vertices.forEach((value, index) => {
+        vInfo.vertices[index].subVectors(value, medianPoint).multiplyScalar(scaling);
+        vInfo.vertices[index].w = 1;
     });
 
     let mesh = [];
-    meshInformation.points.forEach((value) => {
+    vInfo.points.forEach((value) => {
         Object.keys(value).forEach(index => {
-            mesh.push(meshInformation.vertices[value[index]-1]);
+            mesh.push(vInfo.vertices[value[index]-1]);
         });
     });
 
     return mesh;
 }
 
+window.onload = () => {
+    /**
+     * Usa o loader para carregar o .obj
+     * Chama a normalização para deixar os pontos no volume de visão.
+     * Constrói um array de pontos de cor para coloração do objeto.
+     * Chama init de init.js que vai fazer a mágica acontecer
+     */
+    loader.load("../models/NewTieFighter.obj", data => {
+        points = _normalize(data);
+        let size = 0.2 / points.length;
+        let color = 0;
+        colors = points.map(item => [ 0.83 - color, 0.82 - color, 0.65 - (color += size) - size, 1]);
+        init();
+    });	
+}

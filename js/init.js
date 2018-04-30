@@ -16,6 +16,8 @@ let gl;
 let arrPoints = [];
 let thetaLoc;
 let theta = [0, 180, 0];
+let points;
+let colors;
 /**
  * Prepara o tamanho canvas e instancia um WebGL renderer nele.
  * Ajusta o viewport para a largura e altura do canvas. 
