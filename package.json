@@ -1,13 +1,13 @@
 {
   "name": "cg",
   "version": "1.0.0",
-  "description": "3D Star Wars rail  space shooter",
+  "description": "3D Star Wars rail space shooter",
   "main": "index.js",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
-    "build": "browserify js/main.js | uglifyjs -mc > app.js",
+    "build": "browserify js/main.js -o app.js",
     "dev": "http-server -c-1 | watchify js/main.js -v -o app.js"
   },
   "repository": {
