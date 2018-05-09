@@ -19,6 +19,17 @@ var Asteroid = function(){
                 child.material = material;
             });
              scene.add(obj);
+        }, // called when loading is in progresses
+        function ( xhr ) {
+    
+            console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+    
+        },
+        // called when loading has errors
+        function ( error ) {
+    
+            console.log( 'An error happened' );
+    
         });
     }
 
@@ -117,7 +128,7 @@ var TIE = function(){
 
     this.load = (uniforms, vertexShader, fragmentShader, scene) => {
         let objLoader = new THREE.OBJLoader();
-        objLoader.load('../models/NewTieFighter.obj', obj => {
+        objLoader.load('/models/NewTieFighter.obj', obj => {
             let material = new THREE.ShaderMaterial({
                 uniforms: uniforms,
                 vertexShader: vertexShader,
@@ -129,6 +140,14 @@ var TIE = function(){
                 child.material = material;
             });
              scene.add(obj);
+        }, xhr => {
+    
+            console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+    
+        }, error=>{
+    
+            console.log(error);
+    
         });
     }
 

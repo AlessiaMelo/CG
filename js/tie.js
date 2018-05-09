@@ -6,7 +6,7 @@ var TIE = function(){
 
     this.load = (uniforms, vertexShader, fragmentShader, scene) => {
         let objLoader = new THREE.OBJLoader();
-        objLoader.load('../models/NewTieFighter.obj', obj => {
+        objLoader.load('/models/NewTieFighter.obj', obj => {
             let material = new THREE.ShaderMaterial({
                 uniforms: uniforms,
                 vertexShader: vertexShader,
@@ -18,6 +18,14 @@ var TIE = function(){
                 child.material = material;
             });
              scene.add(obj);
+        }, xhr => {
+    
+            console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+    
+        }, error=>{
+    
+            console.log(error);
+    
         });
     }
 

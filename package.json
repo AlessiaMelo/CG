@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "browserify js/main.js -o app.js",
-    "dev": "http-server -c-1 | watchify js/main.js -v -o app.js"
+    "dev": "watchify js/main.js -v -o app.js"
   },
   "repository": {
     "type": "git",
