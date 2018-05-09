@@ -7,7 +7,7 @@ var Asteroid = function(){
 
     this.load = (uniforms, vertexShader, fragmentShader, scene) => {
         let objLoader = new THREE.OBJLoader();
-        objLoader.load('../models/Asteroid.obj', obj => {
+        objLoader.load('/models/Asteroid.obj', obj => {
             let material = new THREE.ShaderMaterial( {
                 uniforms: uniforms,
                 vertexShader: vertexShader,
