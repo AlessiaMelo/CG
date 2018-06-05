@@ -1,37 +1,24 @@
+//Loaders	
+let objLoader = new THREE.OBJLoader();
+let mtlLoader = new THREE.MTLLoader();
 
-let THREE = require('three')
-let Asteroid = require('./asteroid');
-let TIE = require('./tie');
-
-// Converts from degrees to radians.
-Math.radians = function(degrees) {
-	return degrees * Math.PI / 180;
-};
-// Converts from radians to degrees.
-Math.degrees = function(radians) {
-	return radians * 180 / Math.PI;
-};
-
+//Cena
 let scene = new THREE.Scene();
-let far = 1000;
-let near = 1;
+let far = 2000;
+let near = 0.1;
 let aspect = window.innerWidth / window.innerHeight;
-let camera = new THREE.PerspectiveCamera( 45, aspect, 1, 1000 );
+let camera = new THREE.PerspectiveCamera(45, aspect, near, far);
 let renderer = new THREE.WebGLRenderer();
-
+renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
-
-let ambientLight = new THREE.AmbientLight( 0xcccccc, 0.4 );
-scene.add( ambientLight );
-
-let pointLight = new THREE.PointLight( 0xffffff, 0.8 );
-camera.add( pointLight );
-camera.position.z = 100;
+ let ambientLight = new THREE.AmbientLight( 0xcccccc, 0.4 );
+ scene.add( ambientLight );
+ let pointLight = new THREE.PointLight( 0xffffff, 0.6 );
+ camera.add( pointLight );
 scene.add( camera );
 
-window.addEventListener('resize', onWindowResize, false);
-
+//Matriz de projeção customizada.
 let tan = Math.tan(Math.radians(camera.getEffectiveFOV()));
 let fpn = -((far + near)/(far - near));
 let tfn = -((2 * far * near)/(far - near));
@@ -41,41 +28,57 @@ customProjectionMatrix.set(1/(aspect * tan), 0, 0, 0,
 							0, 0, fpn, tfn,
 							0, 0, -1, 0);
 
-
+//Shaders customizados.
 let vertexShader = document.getElementById( 'vertex-shader' ).textContent;
 let fragmentShader = document.getElementById( 'fragment-shader' ).textContent;
 
+//Espaço
+// let spacetex = new THREE.TextureLoader().load( '/models/black.jpg' );
+// spacetex.magFilter = THREE.NearestFilter;
+// spacetex.minFilter = THREE.LinearMipMapLinearFilter;
+// let spacesphereMat = new THREE.MeshPhongMaterial({
+//    color: 0xffffff,
+//    specular:0x111111,
+//    shininess: 3,
+//    map:spacetex
+// });
+// let spacesphereGeo = new THREE.SphereGeometry( 64, 16, 16 );
+// var spacesphere = new THREE.Mesh(spacesphereGeo,spacesphereMat);
 
-let asteroidUniforms = {
-	scale: {type: 'f', value: 1.5},
-	theta: {type: 'vec3', value: new THREE.Vector3(0, 120, 0)},
-	customProjectionMatrix: {type:'mat4', value: customProjectionMatrix }
-}
-
-let tieUniforms = {
-	scale: {type: 'f', value: 2.5},
-	theta: {type: 'vec3', value: new THREE.Vector3(0, 0, 0)},
-	customProjectionMatrix: {type:'mat4', value: customProjectionMatrix }
-}
-
-let tie = new TIE();
-tie.load(tieUniforms, vertexShader, fragmentShader, scene);
-
-let asteroid = new Asteroid();
-asteroid.load(asteroidUniforms, vertexShader, fragmentShader, scene);
-
-function render() {
-    requestAnimationFrame( render );
-	renderer.render( scene, camera );
-}
-
-render();
+// spacesphere.material.side = THREE.DoubleSide;  
+// spacesphere.material.map.wrapS = THREE.RepeatWrapping; 
+// spacesphere.material.map.wrapT = THREE.RepeatWrapping;
+// //spacesphere.material.map.offset.set( 0, 0 );
+// spacesphere.material.map.repeat.set( 2, 3);
+  
+// scene.add(spacesphere);
 
 
-function onWindowResize() {
+
+// Millennium Falcon 
+let loadingManager = new THREE.LoadingManager( function() {
+	ship.rotation.z = Math.radians(180);
+	ship.position.z = -40;
+	scene.add( ship );
+} );
+var loader = new THREE.ColladaLoader( loadingManager );
+loader.load('/models/Falcon01/model.dae', function ( collada ) {
+	ship = collada.scene;
+});
+
+const onWindowResize = function () {
     windowHalfX = window.innerWidth / 2;
     windowHalfY = window.innerHeight / 2;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
+
+const render = function() {
+	requestAnimationFrame( render );
+	//spacesphere.rotation.x += 0.002;
+	renderer.render( scene, camera );
+}
+
+window.addEventListener('resize', onWindowResize, false);
+render();
