@@ -33,25 +33,25 @@ let vertexShader = document.getElementById( 'vertex-shader' ).textContent;
 let fragmentShader = document.getElementById( 'fragment-shader' ).textContent;
 
 //Espaço
-// let spacetex = new THREE.TextureLoader().load( '/models/black.jpg' );
-// spacetex.magFilter = THREE.NearestFilter;
-// spacetex.minFilter = THREE.LinearMipMapLinearFilter;
-// let spacesphereMat = new THREE.MeshPhongMaterial({
-//    color: 0xffffff,
-//    specular:0x111111,
-//    shininess: 3,
-//    map:spacetex
-// });
-// let spacesphereGeo = new THREE.SphereGeometry( 64, 16, 16 );
-// var spacesphere = new THREE.Mesh(spacesphereGeo,spacesphereMat);
+let spacetex = new THREE.TextureLoader().load( '/models/black.jpg' );
+spacetex.magFilter = THREE.NearestFilter;
+spacetex.minFilter = THREE.LinearMipMapLinearFilter;
+let spacesphereMat = new THREE.MeshPhongMaterial({
+   color: 0xffffff,
+   specular:0x111111,
+   shininess: 3,
+   map:spacetex
+});
+let spacesphereGeo = new THREE.SphereGeometry( 64, 16, 16 );
+var spacesphere = new THREE.Mesh(spacesphereGeo,spacesphereMat);
 
-// spacesphere.material.side = THREE.DoubleSide;  
-// spacesphere.material.map.wrapS = THREE.RepeatWrapping; 
-// spacesphere.material.map.wrapT = THREE.RepeatWrapping;
-// //spacesphere.material.map.offset.set( 0, 0 );
-// spacesphere.material.map.repeat.set( 2, 3);
+spacesphere.material.side = THREE.DoubleSide;  
+spacesphere.material.map.wrapS = THREE.RepeatWrapping; 
+spacesphere.material.map.wrapT = THREE.RepeatWrapping;
+//spacesphere.material.map.offset.set( 0, 0 );
+spacesphere.material.map.repeat.set( 2, 3);
   
-// scene.add(spacesphere);
+scene.add(spacesphere);
 
 
 
@@ -76,7 +76,7 @@ const onWindowResize = function () {
 
 const render = function() {
 	requestAnimationFrame( render );
-	//spacesphere.rotation.x += 0.002;
+	spacesphere.rotation.x += 0.002;
 	renderer.render( scene, camera );
 }
 
