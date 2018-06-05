@@ -4,7 +4,7 @@ Trabalho prático para a Disciplina de Computação Gráfica - UFSCar Sorocaba -
 
 Mais informações podem ser encontradas na wiki do projeto.
 
-###Autores:
+## Autores:
 
 Aléssia Melo,  
 Leonardo Tozato
