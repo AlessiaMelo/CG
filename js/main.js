@@ -42,7 +42,7 @@ let spacesphereMat = new THREE.MeshPhongMaterial({
    shininess: 3,
    map:spacetex
 });
-let spacesphereGeo = new THREE.SphereGeometry( 64, 16, 16 );
+let spacesphereGeo = new THREE.SphereGeometry( 128, 32, 32 );
 var spacesphere = new THREE.Mesh(spacesphereGeo,spacesphereMat);
 
 spacesphere.material.side = THREE.DoubleSide;  
@@ -54,17 +54,54 @@ spacesphere.material.map.repeat.set( 2, 3);
 scene.add(spacesphere);
 
 
-
+let ship;
+let shipScale = 0.3;
 // Millennium Falcon 
-let loadingManager = new THREE.LoadingManager( function() {
+let shipLoadingManager = new THREE.LoadingManager( function() {
 	ship.rotation.z = Math.radians(180);
-	ship.position.z = -40;
+	ship.scale.x *= shipScale;
+	ship.scale.y *= shipScale;
+	ship.scale.z *= shipScale;		
+	ship.position.z = -15;
 	scene.add( ship );
 } );
-var loader = new THREE.ColladaLoader( loadingManager );
-loader.load('/models/Falcon01/model.dae', function ( collada ) {
+var shipLoader = new THREE.ColladaLoader( shipLoadingManager );
+shipLoader.load('/models/Falcon01/model.dae', function ( collada ) {
 	ship = collada.scene;
 });
+
+
+
+
+//let sphere;
+//let light2 = new THREE.PointLight( 0x0040ff, 2, 50 );
+//light2.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0x0040ff } ) ) );
+//scene.add( light2 );
+//var clock = new THREE.Clock();
+
+let backgroundRotationOffset = 0.002;
+let cameraPosition = 0;
+const onKeyup = function(event){
+	console.log(event.keyCode)
+	switch(event.keyCode){
+		case 32:
+			if(cameraPosition === 0){
+				camera.position.set(0, 35, 0);
+				camera.lookAt(0,0, -40);
+				camera.rotation.z = Math.radians(90);
+				backgroundRotationOffset *= -1;
+				cameraPosition = 1;
+			}
+			else{
+				camera.position.set(0,0,0);
+				camera.lookAt(0,0, -1);
+				camera.rotation.z = 0;
+				backgroundRotationOffset *= -1;
+				cameraPosition = 0;
+			}
+		break;
+	}
+}
 
 const onWindowResize = function () {
     windowHalfX = window.innerWidth / 2;
@@ -74,11 +111,22 @@ const onWindowResize = function () {
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
+
+
 const render = function() {
 	requestAnimationFrame( render );
-	spacesphere.rotation.x += 0.002;
+
+	// var time = Date.now() * 0.0005;
+	// var delta = clock.getDelta();
+	// light2.position.x = Math.cos( time * 0.3 ) * 30;
+	// light2.position.y = Math.sin( time * 0.5 ) * 40;
+	// light2.position.z = Math.sin( time * 0.7 ) * 30;
+
+	
+	spacesphere.rotation.x -= backgroundRotationOffset;
 	renderer.render( scene, camera );
 }
 
 window.addEventListener('resize', onWindowResize, false);
+window.addEventListener('keyup', onKeyup, false);
 render();
