@@ -70,34 +70,61 @@ shipLoader.load('/models/Falcon01/model.dae', function ( collada ) {
 	ship = collada.scene;
 });
 
+let customSphereMaterial = new THREE.ShaderMaterial( 
+{
+	uniforms: {
+		color: {type: "vec3", value: new THREE.Color(0x1E90FF)}
+	},
+	vertexShader:   document.getElementById('vertex-shader').textContent,
+	fragmentShader: document.getElementById('fragment-shader').textContent,
+	side: THREE.BackSide,
+	blending: THREE.AdditiveBlending,
+	transparent: true,
+});
 
+let customBoxMaterial = new THREE.ShaderMaterial( 
+	{
+		uniforms: {
+			color: {type: "vec3", value: new THREE.Color(0x1E90FF)}
+		},
+		vertexShader:   document.getElementById('vertex-shader').textContent,
+		fragmentShader: document.getElementById('fragment-shader').textContent,
+		side: THREE.BackSide,
+		blending: THREE.AdditiveBlending,
+		transparent: true,
+	});
+	
+let engineSphereGeometry = new THREE.SphereBufferGeometry(2.2, 16,16, Math.PI, Math.PI*2, 0, 0.5 * Math.PI)
+let engineSphere = new THREE.Mesh( engineSphereGeometry, customSphereMaterial );
+engineSphere.rotation.x = Math.radians(90);
+engineSphere.position.z = -13.3;
+//scene.add( engineSphere );
 
-
-//let sphere;
-//let light2 = new THREE.PointLight( 0x0040ff, 2, 50 );
-//light2.add( new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( { color: 0x0040ff } ) ) );
-//scene.add( light2 );
-//var clock = new THREE.Clock();
+let engineCylinderGeometry = new THREE.CylinderBufferGeometry( 2, 2, 0.15, 8, 1, true);
+let engineCylinder = new THREE.Mesh(engineCylinderGeometry, customBoxMaterial);
+engineCylinder.position.z = -10;
+scene.add(engineCylinder);
 
 let backgroundRotationOffset = 0.002;
 let cameraPosition = 0;
 const onKeyup = function(event){
-	console.log(event.keyCode)
 	switch(event.keyCode){
 		case 32:
 			if(cameraPosition === 0){
 				camera.position.set(0, 35, 0);
 				camera.lookAt(0,0, -40);
 				camera.rotation.z = Math.radians(90);
-				backgroundRotationOffset *= -1;
 				cameraPosition = 1;
+				scene.remove(engineCylinder);
+				scene.add(engineSphere);
 			}
 			else{
 				camera.position.set(0,0,0);
 				camera.lookAt(0,0, -1);
 				camera.rotation.z = 0;
-				backgroundRotationOffset *= -1;
 				cameraPosition = 0;
+				scene.add(engineCylinder);
+				scene.remove(engineSphere);
 			}
 		break;
 	}
@@ -116,11 +143,11 @@ const onWindowResize = function () {
 const render = function() {
 	requestAnimationFrame( render );
 
-	// var time = Date.now() * 0.0005;
-	// var delta = clock.getDelta();
-	// light2.position.x = Math.cos( time * 0.3 ) * 30;
-	// light2.position.y = Math.sin( time * 0.5 ) * 40;
-	// light2.position.z = Math.sin( time * 0.7 ) * 30;
+	//  var time = Date.now() * 0.0005;
+	//  var delta = clock.getDelta();
+	//  light2.position.x = Math.cos( time * 0.3 ) * 30;
+	//  light2.position.y = Math.sin( time * 0.5 ) * 40;
+	//  light2.position.z = Math.sin( time * 0.7 ) * 30;
 
 	
 	spacesphere.rotation.x -= backgroundRotationOffset;
