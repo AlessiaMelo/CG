@@ -2,6 +2,8 @@
 let objLoader = new THREE.OBJLoader();
 let mtlLoader = new THREE.MTLLoader();
 
+let shipGroup = new THREE.Group();
+
 //Cena
 let scene = new THREE.Scene();
 let far = 2000;
@@ -12,11 +14,11 @@ let renderer = new THREE.WebGLRenderer();
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
- let ambientLight = new THREE.AmbientLight( 0xcccccc, 0.4 );
- scene.add( ambientLight );
- let pointLight = new THREE.PointLight( 0xffffff, 0.6 );
- camera.add( pointLight );
-scene.add( camera );
+let ambientLight = new THREE.AmbientLight( 0xcccccc, 0.4 );
+scene.add( ambientLight );
+let pointLight = new THREE.PointLight( 0xffffff, 0.6 );
+camera.add( pointLight );
+shipGroup.add( camera );
 
 //Matriz de projeção customizada.
 let tan = Math.tan(Math.radians(camera.getEffectiveFOV()));
@@ -42,7 +44,7 @@ let spacesphereMat = new THREE.MeshPhongMaterial({
    shininess: 3,
    map:spacetex
 });
-let spacesphereGeo = new THREE.SphereGeometry( 128, 32, 32 );
+let spacesphereGeo = new THREE.SphereGeometry( 256, 64, 64 );
 var spacesphere = new THREE.Mesh(spacesphereGeo,spacesphereMat);
 
 spacesphere.material.side = THREE.DoubleSide;  
@@ -53,7 +55,6 @@ spacesphere.material.map.repeat.set( 2, 3);
   
 scene.add(spacesphere);
 
-
 let ship;
 let shipScale = 0.3;
 // Millennium Falcon 
@@ -63,15 +64,15 @@ let shipLoadingManager = new THREE.LoadingManager( function() {
 	ship.scale.y *= shipScale;
 	ship.scale.z *= shipScale;		
 	ship.position.z = -15;
-	scene.add( ship );
+	shipGroup.add(ship);
+	scene.add( shipGroup );
 } );
 var shipLoader = new THREE.ColladaLoader( shipLoadingManager );
 shipLoader.load('/models/Falcon01/model.dae', function ( collada ) {
 	ship = collada.scene;
 });
 
-let customSphereMaterial = new THREE.ShaderMaterial( 
-{
+let customSphereMaterial = new THREE.ShaderMaterial({
 	uniforms: {
 		color: {type: "vec3", value: new THREE.Color(0x1E90FF)}
 	},
@@ -82,31 +83,62 @@ let customSphereMaterial = new THREE.ShaderMaterial(
 	transparent: true,
 });
 
-let customBoxMaterial = new THREE.ShaderMaterial( 
-	{
-		uniforms: {
-			color: {type: "vec3", value: new THREE.Color(0x1E90FF)}
-		},
-		vertexShader:   document.getElementById('vertex-shader').textContent,
-		fragmentShader: document.getElementById('fragment-shader').textContent,
-		side: THREE.BackSide,
-		blending: THREE.AdditiveBlending,
-		transparent: true,
-	});
+let customBoxMaterial = new THREE.ShaderMaterial({
+	uniforms: {
+		color: {type: "vec3", value: new THREE.Color(0x1E90FF)}
+	},
+	vertexShader:   document.getElementById('vertex-shader').textContent,
+	fragmentShader: document.getElementById('fragment-shader').textContent,
+	side: THREE.BackSide,
+	blending: THREE.AdditiveBlending,
+	transparent: true,
+});
 	
 let engineSphereGeometry = new THREE.SphereBufferGeometry(2.2, 16,16, Math.PI, Math.PI*2, 0, 0.5 * Math.PI)
 let engineSphere = new THREE.Mesh( engineSphereGeometry, customSphereMaterial );
 engineSphere.rotation.x = Math.radians(90);
 engineSphere.position.z = -13.3;
-//scene.add( engineSphere );
+shipGroup.add(engineSphere);
 
 let engineCylinderGeometry = new THREE.CylinderBufferGeometry( 2, 2, 0.15, 8, 1, true);
 let engineCylinder = new THREE.Mesh(engineCylinderGeometry, customBoxMaterial);
 engineCylinder.position.z = -10;
-scene.add(engineCylinder);
+shipGroup.add(engineCylinder);
 
 let backgroundRotationOffset = 0.002;
 let cameraPosition = 0;
+let movSpeed = 1;
+let routeOffset = 50.
+
+const onKeydown = function(event){
+	switch(event.keyCode){
+		case 87:
+			if(shipGroup.position.y < routeOffset)
+				shipGroup.position.y += movSpeed;
+			else
+				console.log("volte para a rota");
+		break;
+		case 68:
+			if(shipGroup.position.x < routeOffset)
+				shipGroup.position.x += movSpeed;
+			else
+				console.log("volte para a rota");
+		break;
+		case 83:
+			if(shipGroup.position.y > -routeOffset)
+				shipGroup.position.y -= movSpeed;
+			else
+				console.log("volte para a rota");
+		break;
+		case 65:
+			if(shipGroup.position.x > -routeOffset)
+				shipGroup.position.x -= movSpeed;
+			else
+				console.log("volte para a rota");
+		break;
+	}
+}
+
 const onKeyup = function(event){
 	switch(event.keyCode){
 		case 32:
@@ -115,16 +147,16 @@ const onKeyup = function(event){
 				camera.lookAt(0,0, -40);
 				camera.rotation.z = Math.radians(90);
 				cameraPosition = 1;
-				scene.remove(engineCylinder);
-				scene.add(engineSphere);
+				shipGroup.remove(engineCylinder);
+				shipGroup.add(engineSphere);
 			}
 			else{
 				camera.position.set(0,0,0);
 				camera.lookAt(0,0, -1);
 				camera.rotation.z = 0;
 				cameraPosition = 0;
-				scene.add(engineCylinder);
-				scene.remove(engineSphere);
+				shipGroup.add(engineCylinder);
+				shipGroup.remove(engineSphere);
 			}
 		break;
 	}
@@ -142,18 +174,12 @@ const onWindowResize = function () {
 
 const render = function() {
 	requestAnimationFrame( render );
-
-	//  var time = Date.now() * 0.0005;
-	//  var delta = clock.getDelta();
-	//  light2.position.x = Math.cos( time * 0.3 ) * 30;
-	//  light2.position.y = Math.sin( time * 0.5 ) * 40;
-	//  light2.position.z = Math.sin( time * 0.7 ) * 30;
-
-	
 	spacesphere.rotation.x -= backgroundRotationOffset;
+	
 	renderer.render( scene, camera );
 }
 
 window.addEventListener('resize', onWindowResize, false);
 window.addEventListener('keyup', onKeyup, false);
+window.addEventListener('keydown', onKeydown, false);
 render();
