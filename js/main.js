@@ -94,21 +94,52 @@ let customBoxMaterial = new THREE.ShaderMaterial({
 	transparent: true,
 });
 	
+//Engine
 let engineSphereGeometry = new THREE.SphereBufferGeometry(2.2, 16,16, Math.PI, Math.PI*2, 0, 0.5 * Math.PI)
 let engineSphere = new THREE.Mesh( engineSphereGeometry, customSphereMaterial );
 engineSphere.rotation.x = Math.radians(90);
 engineSphere.position.z = -13.3;
-shipGroup.add(engineSphere);
+
 
 let engineCylinderGeometry = new THREE.CylinderBufferGeometry( 2, 2, 0.15, 8, 1, true);
 let engineCylinder = new THREE.Mesh(engineCylinderGeometry, customBoxMaterial);
 engineCylinder.position.z = -10;
 shipGroup.add(engineCylinder);
 
+//Base dos tiros
+let laserBeam	= new THREEx.LaserBeam()
+laserBeam.object3d.scale.set(4, 4, 4);
+laserBeam.object3d.rotation.y = Math.radians(90);
+let arrayShots = [];
+
+//Efeito do disparo
+let shotTexture = new THREE.TextureLoader().load('/models/shot/orange_particle.png');
+let shotMaterial = new THREE.SpriteMaterial({
+	map: shotTexture,
+	blending : THREE.AdditiveBlending,
+});
+let shotSprite = new THREE.Sprite(shotMaterial);
+
+shotSprite.scale.set(2,2,2);
+//Adicionar luz ao tiro;
+let shotLight	= new THREE.PointLight(0xFFA500);
+shotLight.intensity	= 0.5
+shotLight.distance	= 4
+shotLight.position.x= -0.05
+shotSprite.add(shotLight)
+
+let shotEffectR = shotSprite.clone();
+shotEffectR.position.set(10, 10, 10);
+scene.add(shotEffectR);
+
+let shotEffectL = shotSprite.clone();
+shotEffectL.position.set(10, 10, 10);
+scene.add(shotEffectL);
+
 let backgroundRotationOffset = 0.002;
 let cameraPosition = 0;
-let movSpeed = 1;
-let routeOffset = 50.
+let movSpeed = 0.5;
+let routeOffset = 50;
 
 const onKeydown = function(event){
 	switch(event.keyCode){
@@ -133,6 +164,18 @@ const onKeydown = function(event){
 		case 65:
 			if(shipGroup.position.x > -routeOffset)
 				shipGroup.position.x -= movSpeed;
+			else
+				console.log("volte para a rota");
+		break;
+		case 81:
+			if(shipGroup.position.z > -routeOffset)
+				shipGroup.position.z -= movSpeed;
+			else
+				console.log("volte para a rota");
+		break;
+		case 69:
+			if(shipGroup.position.z < -5)
+				shipGroup.position.z += movSpeed;
 			else
 				console.log("volte para a rota");
 		break;
@@ -162,6 +205,22 @@ const onKeyup = function(event){
 	}
 }
 
+let blink = 0;
+const onMouseDown = function(){
+	shotEffectR.position.set(shipGroup.position.x + 0.5, shipGroup.position.y - 0.5, shipGroup.position.z - 15);
+	shotEffectL.position.set(shipGroup.position.x - 0.5, shipGroup.position.y - 0.5, shipGroup.position.z - 15);
+	blink = 0;
+
+	let shotR = laserBeam.object3d.clone();
+	shotR.position.set(shipGroup.position.x + 0.5, shipGroup.position.y - 1, shipGroup.position.z - 15);
+	scene.add(shotR);
+	arrayShots.push(shotR);
+	let shotL = laserBeam.object3d.clone();
+	shotL.position.set(shipGroup.position.x - 0.5, shipGroup.position.y - 1, shipGroup.position.z - 15);
+	scene.add(shotL);
+	arrayShots.push(shotL);
+}
+
 const onWindowResize = function () {
     windowHalfX = window.innerWidth / 2;
     windowHalfY = window.innerHeight / 2;
@@ -170,16 +229,25 @@ const onWindowResize = function () {
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
-
-
 const render = function() {
 	requestAnimationFrame( render );
 	spacesphere.rotation.x -= backgroundRotationOffset;
-	
+	arrayShots.forEach((shot,index) => {
+		if(shot.position.z < 300) 
+			shot.position.z -= 5;
+		else
+			arrayShots.splice(index, 1); 
+	});
+	if(++blink === 2){
+		shotEffectR.position.set(10, 10, 10);
+		shotEffectL.position.set(10, 10, 10);
+		blink = 0;
+	}
 	renderer.render( scene, camera );
 }
 
 window.addEventListener('resize', onWindowResize, false);
 window.addEventListener('keyup', onKeyup, false);
 window.addEventListener('keydown', onKeydown, false);
+window.addEventListener('mousedown', onMouseDown, false);
 render();
