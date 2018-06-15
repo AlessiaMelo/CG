@@ -4,6 +4,15 @@ let mtlLoader = new THREE.MTLLoader();
 
 let shipGroup = new THREE.Group();
 
+
+const onProgress = function ( xhr ) {
+	if ( xhr.lengthComputable ) {
+		var percentComplete = xhr.loaded / xhr.total * 100;
+		console.log( Math.round( percentComplete, 2 ) + '% downloaded' );
+	}
+};
+const onError = function ( xhr ) { console.log(xhr) };
+
 //Cena
 let scene = new THREE.Scene();
 let far = 2000;
@@ -141,6 +150,23 @@ let cameraPosition = 0;
 let movSpeed = 0.5;
 let routeOffset = 50;
 
+//Meteoros
+let bigMeteor;
+let BigMeteorTexture = new THREE.TextureLoader().load('/models/meteors/asteroid/Object001_2015-02-06_14-35-47_complete.rpf_converted.jpg'); 
+var loader = new THREE.OBJLoader();
+loader.load( 'models/meteors/asteroid/asteroid.obj', function ( mesh ) {
+	let material = new THREE.MeshStandardMaterial({
+		map : BigMeteorTexture
+	});
+	mesh.traverse( function ( child ) {
+		if ( child instanceof THREE.Mesh ) {
+			child.material.map = BigMeteorTexture;
+		}
+	});
+	mesh.scale.set(0.1, 0.1, 0.1);
+	bigMeteor = mesh;
+}, onProgress, onError);
+
 const onKeydown = function(event){
 	switch(event.keyCode){
 		case 87:
@@ -229,20 +255,58 @@ const onWindowResize = function () {
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
+let meteors = [];
+let where = new THREE.Vector3();
+
+const putMeteor = function(){
+	if(ship && bigMeteor){	
+		let newMeteor = bigMeteor.clone();
+		let start = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -110);
+		let end = ship.position;
+		newMeteor.path = new THREE.Line3(start, end);
+		newMeteor.t = 0;
+		meteors.push(newMeteor);
+		scene.add(newMeteor);
+	}
+}
+
+setInterval(putMeteor, 1500);
 const render = function() {
 	requestAnimationFrame( render );
 	spacesphere.rotation.x -= backgroundRotationOffset;
+	
 	arrayShots.forEach((shot,index) => {
-		if(shot.position.z < 300) 
+		if(shot.position.z < 257) 
 			shot.position.z -= 5;
-		else
-			arrayShots.splice(index, 1); 
+		else{
+			arrayShots.splice(index, 1);
+			scene.remove(shot);
+		}
+			 
 	});
+
 	if(++blink === 2){
 		shotEffectR.position.set(10, 10, 10);
 		shotEffectL.position.set(10, 10, 10);
 		blink = 0;
 	}
+
+	meteors.forEach((meteor, index) => {
+		if(meteor.t <= 1.2){
+			meteor.t += 0.005;
+			meteor.path.at(meteor.t, where);
+			meteor.position.x = where.x;
+			meteor.position.y = where.y;
+			meteor.position.z = where.z;
+			meteor.rotation.x += 0.05;
+			meteor.rotation.y += 0.03;
+		}
+		else{
+			meteors.splice(index, 1);
+			scene.remove(meteor);
+		}
+	});
+	
 	renderer.render( scene, camera );
 }
 
