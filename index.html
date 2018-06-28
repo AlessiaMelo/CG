@@ -12,8 +12,7 @@
 		varying vec3 vNormal;
 		varying vec3 vColor;
 		uniform vec3 color;
-		void main() 
-		{
+		void main(){
 			vColor = color;
 			vNormal = normalize( normalMatrix * normal );
 			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
@@ -24,10 +23,39 @@
 		varying vec3 vNormal;
 		varying vec3 vColor;
 
-		void main() 
-		{
+		void main(){
 			float intensity = pow( 0.7 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 4.0 ); 
 			gl_FragColor = vec4( vColor, 1.0 ) * intensity;
+		}
+	</script>
+	<script id="asteroid-vertex-shader" type="x-shader/x-vertex">
+		varying vec2 vUv;
+
+		void main(){
+			vUv = uv;
+			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+			gl_Position = projectionMatrix * mvPosition;
+		}
+	</script>
+
+	<script id="asteroid-fragment-shader" type="x-shader/x-fragment">
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+
+		uniform sampler2D tOne;
+		uniform sampler2D tSec;
+		uniform sampler2D tThird;
+
+		varying vec2 vUv;
+
+		void main(void){
+			vec3 c;
+			vec4 Ca = texture2D(tOne, vUv);
+			vec4 Cb = texture2D(tSec, vUv);
+			vec4 Cc = texture2D(tThird, vUv);
+			c = Ca.rgb * Ca.a + Cb.rgb * Cb.a * + Cc.rgb * Cc.a + (1.0 - Ca.a);
+			gl_FragColor= vec4(c, 1.0);
 		}
 	</script>
 	<script src='/js/mathUtils.js'></script>
@@ -35,7 +63,10 @@
 	<script src='/lib/OBJLoader.js'></script>
 	<script src='/lib/MTLLoader.js'></script>
 	<script src="/lib/TDSLoader.js"></script>
-	<script src='/lib/threex.laserbeam.js'></script>
+	<script src="/lib/STLLoader.js"></script>
+	<script src="/lib/inflate.min.js"></script>
+	<script src="/lib/FBXLoader.js"></script>
+	<script src='/lib/threex.laserbeam.js'></script>	
 	<script src="/lib/ColladaLoader.js"></script>
 	<script src='/lib/TGALoader.js'></script>
 	<script src="/js/main.js"></script>

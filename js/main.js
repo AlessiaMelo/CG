@@ -1,7 +1,6 @@
 //Loaders	
 let objLoader = new THREE.OBJLoader();
 let mtlLoader = new THREE.MTLLoader();
-
 let shipGroup = new THREE.Group();
 
 
@@ -151,21 +150,73 @@ let movSpeed = 0.5;
 let routeOffset = 50;
 
 //Meteoros
+let meteorsType = [];
 let bigMeteor;
-let BigMeteorTexture = new THREE.TextureLoader().load('/models/meteors/asteroid/Object001_2015-02-06_14-35-47_complete.rpf_converted.jpg'); 
-var loader = new THREE.OBJLoader();
-loader.load( 'models/meteors/asteroid/asteroid.obj', function ( mesh ) {
-	let material = new THREE.MeshStandardMaterial({
-		map : BigMeteorTexture
-	});
+let bigMeteorTexture = new THREE.TextureLoader().load('/models/meteors/asteroid/Object001_2015-02-06_14-35-47_complete.rpf_converted.jpg'); 
+var biMeteorloader = new THREE.OBJLoader();
+biMeteorloader.load( 'models/meteors/asteroid/asteroid.obj', function ( mesh ) {
 	mesh.traverse( function ( child ) {
 		if ( child instanceof THREE.Mesh ) {
-			child.material.map = BigMeteorTexture;
+			child.material.map = bigMeteorTexture;
 		}
 	});
-	mesh.scale.set(0.1, 0.1, 0.1);
+	mesh.scale.set(0.01, 0.01, 0.01);
 	bigMeteor = mesh;
+	meteorsType.push(bigMeteor);
 }, onProgress, onError);
+
+let rockMeteor;
+let rockMeteorTexture = new THREE.TextureLoader().load('/models/meteors/Rock/RockTexture.jpg'); 
+let rockMeteorLoader = new THREE.OBJLoader();
+rockMeteorLoader.load( 'models/meteors/Rock/Rock.obj', function ( mesh ) {
+	mesh.traverse( function ( child ) {
+		if ( child instanceof THREE.Mesh ) {
+			child.material.map = rockMeteorTexture;
+		}
+	});
+	rockMeteor = mesh;
+	meteorsType.push(rockMeteor);
+}, onProgress, onError);
+
+let iceMeteor;
+let iceMeteorTexture_1n = new THREE.TextureLoader().load('models/meteors/asteroid-01/textures/Asteroid_01_1n.png'); 
+let iceMeteorTexture_alb = new THREE.TextureLoader().load('models/meteors/asteroid-01/textures/Asteroid_01_alb.png'); 
+let iceMeteorTexture_ao = new THREE.TextureLoader().load('models/meteors/asteroid-01/textures/Asteroid_01_ao.png');
+let asteroidVertexShader = document.getElementById( 'asteroid-vertex-shader' ).textContent;
+let asteroidFragmentShader = document.getElementById( 'asteroid-fragment-shader' ).textContent; 
+let iceMeteorMaterial = new THREE.ShaderMaterial({
+	uniforms: {
+		tOne: { type: "t", value: THREE.ImageUtils.loadTexture( "models/meteors/asteroid-01/textures/Asteroid_01_1n.png" ) },
+		tThird: { type: "t", value: THREE.ImageUtils.loadTexture( "models/meteors/asteroid-01/textures/Asteroid_01_alb.png" ) },
+		tSec: { type: "t", value: THREE.ImageUtils.loadTexture( "models/meteors/asteroid-01/textures/Asteroid_01_ao.png" ) }
+	},
+	vertexShader:   asteroidVertexShader,
+	fragmentShader: asteroidFragmentShader,
+});
+let iceMeteorLoader = new THREE.FBXLoader();
+iceMeteorLoader.load( 'models/meteors/asteroid-01/source/asteroid.fbx', function ( mesh ) {
+	
+	mesh.traverse( function ( child ) {
+		if ( child instanceof THREE.Mesh ) {
+			child.material = iceMeteorMaterial;
+		}
+	});
+
+	mesh.position.z = -10;
+	mesh.scale.set(0.01, 0.01, 0.01)
+	iceMeteor = mesh;
+ 	meteorsType.push(iceMeteor);
+}, onProgress, onError);
+
+//TIE Fighter
+let tieFighter;
+new THREE.TDSLoader().load('/models/tie_fighter/TF_3DS02.3ds', function( mesh ){
+	mesh.scale.set(0.15, 0.15, 0.15);
+	mesh.rotation.x = Math.radians(270);
+	tieFighter = mesh;
+	meteorsType.push(tieFighter);
+}, onProgress, onError);
+
 
 const onKeydown = function(event){
 	switch(event.keyCode){
@@ -257,20 +308,23 @@ const onWindowResize = function () {
 
 let meteors = [];
 let where = new THREE.Vector3();
-
 const putMeteor = function(){
-	if(ship && bigMeteor){	
-		let newMeteor = bigMeteor.clone();
+	if(ship && meteorsType.length == 4){
+		let meteorType = Math.randomRange(3, 0);	
+		let newMeteor = meteorsType[meteorType].clone();
 		let start = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -110);
-		let end = ship.position;
-		newMeteor.path = new THREE.Line3(start, end);
+		let controlPoint1 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -80);
+		let controlPoint2 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -40);
+		let end = shipGroup.position;
+		newMeteor.path = meteorType == 2 ? new THREE.CubicBezierCurve3(start, controlPoint1, controlPoint2, end): new THREE.Line3(start, end);
 		newMeteor.t = 0;
+		newMeteor.type = meteorType;
 		meteors.push(newMeteor);
 		scene.add(newMeteor);
 	}
 }
 
-setInterval(putMeteor, 1500);
+setInterval(putMeteor, 2000);
 const render = function() {
 	requestAnimationFrame( render );
 	spacesphere.rotation.x -= backgroundRotationOffset;
@@ -293,13 +347,17 @@ const render = function() {
 
 	meteors.forEach((meteor, index) => {
 		if(meteor.t <= 1.2){
-			meteor.t += 0.005;
-			meteor.path.at(meteor.t, where);
+			meteor.t += 0.01;
+			if(meteor.type != 2) 
+				meteor.path.at(meteor.t, where); 
+			else 
+				meteor.path.getPoint(meteor.t, where);
+			
 			meteor.position.x = where.x;
 			meteor.position.y = where.y;
 			meteor.position.z = where.z;
-			meteor.rotation.x += 0.05;
-			meteor.rotation.y += 0.03;
+			meteor.rotation.x += 0.07;
+			meteor.rotation.y += 0.05;
 		}
 		else{
 			meteors.splice(index, 1);
