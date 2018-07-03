@@ -28,7 +28,7 @@
 			gl_FragColor = vec4( vColor, 1.0 ) * intensity;
 		}
 	</script>
-	<script id="asteroid-vertex-shader" type="x-shader/x-vertex">
+	<script id="ice-asteroid-vertex-shader" type="x-shader/x-vertex">
 		varying vec2 vUv;
 
 		void main(){
@@ -37,8 +37,7 @@
 			gl_Position = projectionMatrix * mvPosition;
 		}
 	</script>
-
-	<script id="asteroid-fragment-shader" type="x-shader/x-fragment">
+	<script id="ice-asteroid-fragment-shader" type="x-shader/x-fragment">
 		#ifdef GL_ES
 		precision highp float;
 		#endif
@@ -58,6 +57,42 @@
 			gl_FragColor= vec4(c, 1.0);
 		}
 	</script>
+	<script id="big-asteroid-vertex-shader" type="x-shader/x-vertex">
+		struct DirectionalLight {
+			vec3 direction;
+			vec3 color;
+		};
+		uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
+		
+		uniform vec3 lightPosition;
+		uniform vec3 ambientProduct;
+		uniform vec3 diffuseProduct;
+		uniform vec3 specularProduct;
+		uniform float shininess;
+		varying vec3 vColor;
+		
+		void main() {
+			vec4 eyePosition = modelViewMatrix * vec4( position, 1.0 );
+			gl_Position = projectionMatrix * eyePosition;
+			vec3 N = normalize( normalMatrix * normal );
+			vec3 L = normalize( lightPosition.xyz - eyePosition.xyz );
+			vec3 E = normalize( - eyePosition.xyz );
+			vec3 R = reflect (-E, N);
+			float NdotL = dot (N, L);
+			float Kd = max (NdotL , 0.0) ;
+			float Ks = ( NdotL < 0.0) ? 0.0 : pow ( max ( dot (R, E), 0.0), shininess );
+			vec3 diffuse = Kd * diffuseProduct ;
+			vec3 specular = Ks * specularProduct ;
+			vec3 ambient = ambientProduct ;
+			vColor = ambient + diffuse + specular ;
+		}
+	</script>
+	<script id="big-asteroid-fragment-shader" type="x-shader/x-fragment">
+		varying vec3 vColor;
+		void main() {
+			gl_FragColor = vec4(vColor, 1);
+		}
+	</script>
 	<script src='/js/mathUtils.js'></script>
 	<script src='/lib/three.min.js'></script>
 	<script src='/lib/OBJLoader.js'></script>
@@ -66,7 +101,10 @@
 	<script src="/lib/STLLoader.js"></script>
 	<script src="/lib/inflate.min.js"></script>
 	<script src="/lib/FBXLoader.js"></script>
-	<script src='/lib/threex.laserbeam.js'></script>	
+	<script src='/lib/threex.laserbeam.js'></script>
+	<script src='/lib/threex.collider.js'></script>	
+	<script src='/lib/threex.colliderhelper.js'></script>
+	<script src='/lib/threex.collidersystem.js'></script>
 	<script src="/lib/ColladaLoader.js"></script>
 	<script src='/lib/TGALoader.js'></script>
 	<script src="/js/main.js"></script>

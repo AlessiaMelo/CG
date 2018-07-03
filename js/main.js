@@ -1,7 +1,5 @@
-//Loaders	
-let objLoader = new THREE.OBJLoader();
-let mtlLoader = new THREE.MTLLoader();
 let shipGroup = new THREE.Group();
+let colliderSystem	= new THREEx.ColliderSystem();
 
 
 const onProgress = function ( xhr ) {
@@ -22,10 +20,17 @@ let renderer = new THREE.WebGLRenderer();
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
+
 let ambientLight = new THREE.AmbientLight( 0xcccccc, 0.4 );
 scene.add( ambientLight );
-let pointLight = new THREE.PointLight( 0xffffff, 0.6 );
+
+let pointLight = new THREE.DirectionalLight(0xeeeeff)
+
+pointLight.ambient = new THREE.Vector3(1.0, 1.0, 1.0);
+pointLight.diffuse = new THREE.Vector3(1.0, 1.0, 1.0);
+pointLight.specular = new THREE.Vector3(1.0, 1.0, 1.0);
 camera.add( pointLight );
+
 shipGroup.add( camera );
 
 //Matriz de projeção customizada.
@@ -53,15 +58,16 @@ let spacesphereMat = new THREE.MeshPhongMaterial({
    map:spacetex
 });
 let spacesphereGeo = new THREE.SphereGeometry( 256, 64, 64 );
-var spacesphere = new THREE.Mesh(spacesphereGeo,spacesphereMat);
-
+let spacesphere = new THREE.Mesh(spacesphereGeo,spacesphereMat);
 spacesphere.material.side = THREE.DoubleSide;  
 spacesphere.material.map.wrapS = THREE.RepeatWrapping; 
 spacesphere.material.map.wrapT = THREE.RepeatWrapping;
-//spacesphere.material.map.offset.set( 0, 0 );
 spacesphere.material.map.repeat.set( 2, 3);
-  
 scene.add(spacesphere);
+
+
+let helper;
+
 
 let ship;
 let shipScale = 0.3;
@@ -72,10 +78,40 @@ let shipLoadingManager = new THREE.LoadingManager( function() {
 	ship.scale.y *= shipScale;
 	ship.scale.z *= shipScale;		
 	ship.position.z = -15;
+	ship.name = 'falcon';
+	ship.hp = 100;
+	let collider = THREEx.Collider.createFromObject3d(ship)
+	ship.userData.collider = collider
+	
+	scene.add(new THREE.BoxHelper( ship))
+
+	collider.addEventListener('contactEnter', function(otherCollider){
+		if(this.object3d.name == 'falcon' && otherCollider.object3d.name == 'meteor1') {
+			this.object3d.hp -= 100;
+			console.log("meteor impact");
+			//scene.remove(otherCollider.object3d);
+		}
+		if(this.object3d.name == 'falcon' && otherCollider.object3d.name == 'meteor2') {
+			this.object3d.hp -= 30;
+			console.log("meteor impact");
+			//scene.remove(otherCollider.object3d);
+		}
+		if(this.object3d.name == 'falcon' && otherCollider.object3d.name == 'meteor3') {
+			this.object3d.hp -= 15;
+			console.log("meteor impact");
+			//scene.remove(otherCollider.object3d);
+		}
+		if(this.object3d.name == 'falcon' && otherCollider.object3d.name == 'tie') {
+			this.object3d.hp -= 100;
+			console.log("meteor impact");
+			//scene.remove(otherCollider.object3d);
+		}
+	})
+
 	shipGroup.add(ship);
 	scene.add( shipGroup );
-} );
-var shipLoader = new THREE.ColladaLoader( shipLoadingManager );
+});
+let shipLoader = new THREE.ColladaLoader( shipLoadingManager );
 shipLoader.load('/models/Falcon01/model.dae', function ( collada ) {
 	ship = collada.scene;
 });
@@ -90,7 +126,6 @@ let customSphereMaterial = new THREE.ShaderMaterial({
 	blending: THREE.AdditiveBlending,
 	transparent: true,
 });
-
 let customBoxMaterial = new THREE.ShaderMaterial({
 	uniforms: {
 		color: {type: "vec3", value: new THREE.Color(0x1E90FF)}
@@ -153,15 +188,63 @@ let routeOffset = 50;
 let meteorsType = [];
 let bigMeteor;
 let bigMeteorTexture = new THREE.TextureLoader().load('/models/meteors/asteroid/Object001_2015-02-06_14-35-47_complete.rpf_converted.jpg'); 
-var biMeteorloader = new THREE.OBJLoader();
+let biMeteorloader = new THREE.OBJLoader();
+
+let bigUniforms = THREE.UniformsUtils.merge([
+    THREE.UniformsLib["lights"],
+    {
+      lightPosition: {
+        type: "v3",
+        value: pointLight.position
+      }
+    },
+    {
+      ambientProduct: {
+        type: "v3",
+        value: pointLight.ambient.multiply(0, 0, 1)
+      }
+    },
+    {
+      diffuseProduct: {
+        type: "v3",
+        value: pointLight.diffuse.multiply(4, 4, 4)
+      }
+    },
+    {
+      specularProduct: {
+        type: "v3",
+        value: pointLight.specular.multiply(5, 5, 5)
+      }
+    },
+    {
+      shininess: {
+        type: "float",
+        value: 100.0
+      }
+    }
+  ])
+
 biMeteorloader.load( 'models/meteors/asteroid/asteroid.obj', function ( mesh ) {
+	let material = new THREE.ShaderMaterial({
+		uniforms: bigUniforms,
+		vertexShader: document.getElementById('big-asteroid-vertex-shader').textContent,
+		fragmentShader: document.getElementById('big-asteroid-fragment-shader').textContent,
+		lights: true
+	})
+	
 	mesh.traverse( function ( child ) {
 		if ( child instanceof THREE.Mesh ) {
+			//child.material = material;
 			child.material.map = bigMeteorTexture;
 		}
 	});
+
 	mesh.scale.set(0.01, 0.01, 0.01);
+	//mesh.position.z = -10;
 	bigMeteor = mesh;
+	bigMeteor.hp = 150;
+	bigMeteor.name = 'meteor1';
+	//scene.add(bigMeteor);
 	meteorsType.push(bigMeteor);
 }, onProgress, onError);
 
@@ -175,6 +258,8 @@ rockMeteorLoader.load( 'models/meteors/Rock/Rock.obj', function ( mesh ) {
 		}
 	});
 	rockMeteor = mesh;
+	rockMeteor.hp = 15;
+	rockMeteor.name = 'meteor2';
 	meteorsType.push(rockMeteor);
 }, onProgress, onError);
 
@@ -182,8 +267,9 @@ let iceMeteor;
 let iceMeteorTexture_1n = new THREE.TextureLoader().load('models/meteors/asteroid-01/textures/Asteroid_01_1n.png'); 
 let iceMeteorTexture_alb = new THREE.TextureLoader().load('models/meteors/asteroid-01/textures/Asteroid_01_alb.png'); 
 let iceMeteorTexture_ao = new THREE.TextureLoader().load('models/meteors/asteroid-01/textures/Asteroid_01_ao.png');
-let asteroidVertexShader = document.getElementById( 'asteroid-vertex-shader' ).textContent;
-let asteroidFragmentShader = document.getElementById( 'asteroid-fragment-shader' ).textContent; 
+let asteroidVertexShader = document.getElementById( 'ice-asteroid-vertex-shader' ).textContent;
+let asteroidFragmentShader = document.getElementById( 'ice-asteroid-fragment-shader' ).textContent; 
+
 let iceMeteorMaterial = new THREE.ShaderMaterial({
 	uniforms: {
 		tOne: { type: "t", value: THREE.ImageUtils.loadTexture( "models/meteors/asteroid-01/textures/Asteroid_01_1n.png" ) },
@@ -195,17 +281,16 @@ let iceMeteorMaterial = new THREE.ShaderMaterial({
 });
 let iceMeteorLoader = new THREE.FBXLoader();
 iceMeteorLoader.load( 'models/meteors/asteroid-01/source/asteroid.fbx', function ( mesh ) {
-	
 	mesh.traverse( function ( child ) {
 		if ( child instanceof THREE.Mesh ) {
 			child.material = iceMeteorMaterial;
 		}
 	});
-
-	mesh.position.z = -10;
 	mesh.scale.set(0.01, 0.01, 0.01)
 	iceMeteor = mesh;
- 	meteorsType.push(iceMeteor);
+	iceMeteor.hp = 40;
+	iceMeteor.name = 'meteor3';
+ meteorsType.push(iceMeteor);
 }, onProgress, onError);
 
 //TIE Fighter
@@ -214,8 +299,39 @@ new THREE.TDSLoader().load('/models/tie_fighter/TF_3DS02.3ds', function( mesh ){
 	mesh.scale.set(0.15, 0.15, 0.15);
 	mesh.rotation.x = Math.radians(270);
 	tieFighter = mesh;
+	tieFighter.hp = 75;
+	tieFighter.name = 'tie';
 	meteorsType.push(tieFighter);
 }, onProgress, onError);
+
+//Explosão
+let explosion;
+let mixers = [];
+let fireTexture = new THREE.TextureLoader().load('/models/explosion/explosion0012.png');
+let customExplosionMaterial = new THREE.ShaderMaterial({
+	uniforms: {
+		color: {type: "vec3", value: new THREE.Color(0xFDA50F)}
+	},
+	vertexShader:   document.getElementById('vertex-shader').textContent,
+	fragmentShader: document.getElementById('fragment-shader').textContent,
+	side: THREE.BackSide,
+	blending: THREE.AdditiveBlending,
+	transparent: true,
+});
+new THREE.FBXLoader().load('/models/explosion/Explosion.fbx', function(mesh){
+	mesh.mixer = new THREE.AnimationMixer( mesh );
+	mixers.push( mesh.mixer );
+	let action = mesh.mixer.clipAction( mesh.animations[ 0 ] );
+	action.play();
+	mesh.position.z = -10;
+	mesh.scale.set(0.03, 0.03, 0.03)
+	mesh.traverse( function ( child ) {
+			if ( child instanceof THREE.Mesh ) {
+				child.material= customExplosionMaterial;
+			}
+		});
+	explosion = mesh;
+}, onProgress, onError)
 
 
 const onKeydown = function(event){
@@ -290,10 +406,17 @@ const onMouseDown = function(){
 
 	let shotR = laserBeam.object3d.clone();
 	shotR.position.set(shipGroup.position.x + 0.5, shipGroup.position.y - 1, shipGroup.position.z - 15);
+	shotR.name = 'shot';
+	let colliderShotR = THREEx.Collider.createFromObject3d(shotR)
+	shotR.userData.collider = colliderShotR
 	scene.add(shotR);
 	arrayShots.push(shotR);
+
 	let shotL = laserBeam.object3d.clone();
 	shotL.position.set(shipGroup.position.x - 0.5, shipGroup.position.y - 1, shipGroup.position.z - 15);
+	shotL.name = 'shot';
+	let colliderShotL = THREEx.Collider.createFromObject3d(shotL)
+	shotL.userData.collider = colliderShotL
 	scene.add(shotL);
 	arrayShots.push(shotL);
 }
@@ -312,26 +435,40 @@ const putMeteor = function(){
 	if(ship && meteorsType.length == 4){
 		let meteorType = Math.randomRange(3, 0);	
 		let newMeteor = meteorsType[meteorType].clone();
-		let start = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -110);
+		let start = new THREE.Vector3(Math.randomRange(110, -110) , Math.randomRange(110, -110), -110);
 		let controlPoint1 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -80);
 		let controlPoint2 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -40);
 		let end = shipGroup.position;
 		newMeteor.path = meteorType == 2 ? new THREE.CubicBezierCurve3(start, controlPoint1, controlPoint2, end): new THREE.Line3(start, end);
 		newMeteor.t = 0;
 		newMeteor.type = meteorType;
+		
+		let newMeteorCollider = THREEx.Collider.createFromObject3d(newMeteor)
+		newMeteor.userData.collider = newMeteorCollider
+
+		newMeteorCollider.addEventListener('contactEnter', function(otherCollider){
+			if((this.object3d.name == 'meteor1' || this.object3d.name == 'meteor2' || this.object3d.name == 'meteor3' || this.object3d.name == 'tie') && otherCollider.object3d.name == 'shot'){
+				console.log(this.object3d.name);
+				this.object3d.hp -= 15;
+			}
+				
+		})
+		
 		meteors.push(newMeteor);
 		scene.add(newMeteor);
 	}
 }
 
-setInterval(putMeteor, 2000);
+let clock = new THREE.Clock();
+setInterval(putMeteor,5000);
 const render = function() {
 	requestAnimationFrame( render );
 	spacesphere.rotation.x -= backgroundRotationOffset;
 	
 	arrayShots.forEach((shot,index) => {
-		if(shot.position.z < 257) 
+		if(shot.position.z > -257) {
 			shot.position.z -= 5;
+		}
 		else{
 			arrayShots.splice(index, 1);
 			scene.remove(shot);
@@ -347,7 +484,7 @@ const render = function() {
 
 	meteors.forEach((meteor, index) => {
 		if(meteor.t <= 1.2){
-			meteor.t += 0.01;
+			meteor.t += 0.02;
 			if(meteor.type != 2) 
 				meteor.path.at(meteor.t, where); 
 			else 
@@ -365,6 +502,19 @@ const render = function() {
 		}
 	});
 	
+	if ( mixers.length > 0 ) {
+		for ( var i = 0; i < mixers.length; i ++ ) {
+			mixers[ i ].update( clock.getDelta() );
+		}
+	}
+	let colliders	= []
+	scene.traverse(function(object3d){
+		let collider = object3d.userData.collider
+		if( collider === undefined ) return
+		colliders.push( collider )
+	})
+	colliderSystem.computeAndNotify(colliders);
+	if(helper)helper.update();
 	renderer.render( scene, camera );
 }
 
