@@ -57,13 +57,7 @@
 			gl_FragColor= vec4(c, 1.0);
 		}
 	</script>
-	<script id="big-asteroid-vertex-shader" type="x-shader/x-vertex">
-		struct DirectionalLight {
-			vec3 direction;
-			vec3 color;
-		};
-		uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
-		
+	<script id="asteroid-vertex-shader" type="x-shader/x-vertex">
 		uniform vec3 lightPosition;
 		uniform vec3 ambientProduct;
 		uniform vec3 diffuseProduct;
@@ -87,7 +81,7 @@
 			vColor = ambient + diffuse + specular ;
 		}
 	</script>
-	<script id="big-asteroid-fragment-shader" type="x-shader/x-fragment">
+	<script id="asteroid-fragment-shader" type="x-shader/x-fragment">
 		varying vec3 vColor;
 		void main() {
 			gl_FragColor = vec4(vColor, 1);

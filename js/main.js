@@ -24,14 +24,14 @@ document.body.appendChild( renderer.domElement );
 let ambientLight = new THREE.AmbientLight( 0xcccccc, 0.4 );
 scene.add( ambientLight );
 
-let pointLight = new THREE.DirectionalLight(0xeeeeff)
-
+let pointLight = new THREE.PointLight(0xeeeeee)
+pointLight.position.set(0,0,0);
 pointLight.ambient = new THREE.Vector3(1.0, 1.0, 1.0);
 pointLight.diffuse = new THREE.Vector3(1.0, 1.0, 1.0);
 pointLight.specular = new THREE.Vector3(1.0, 1.0, 1.0);
 camera.add( pointLight );
-
-shipGroup.add( camera );
+scene.add(camera);
+//shipGroup.add( camera );
 
 //Matriz de projeção customizada.
 let tan = Math.tan(Math.radians(camera.getEffectiveFOV()));
@@ -64,10 +64,6 @@ spacesphere.material.map.wrapS = THREE.RepeatWrapping;
 spacesphere.material.map.wrapT = THREE.RepeatWrapping;
 spacesphere.material.map.repeat.set( 2, 3);
 scene.add(spacesphere);
-
-
-let helper;
-
 
 let ship;
 let shipScale = 0.3;
@@ -162,7 +158,21 @@ let bigMeteor;
 let bigMeteorTexture = new THREE.TextureLoader().load('/models/meteors/asteroid/Object001_2015-02-06_14-35-47_complete.rpf_converted.jpg'); 
 let biMeteorloader = new THREE.OBJLoader();
 
-let bigUniforms = THREE.UniformsUtils.merge([
+biMeteorloader.load( 'models/meteors/asteroid/asteroid.obj', function ( mesh ) {
+	mesh.traverse( function ( child ) {
+		if ( child instanceof THREE.Mesh ) {
+			child.material.map = bigMeteorTexture;
+		}
+	});
+
+	mesh.scale.set(0.01, 0.01, 0.01);
+	bigMeteor = mesh;
+	bigMeteor.hp = 150;
+	bigMeteor.name = 'meteor1';
+	meteorsType.push(bigMeteor);
+}, onProgress, onError);
+
+let meteorUniforms = THREE.UniformsUtils.merge([
     THREE.UniformsLib["lights"],
     {
       lightPosition: {
@@ -173,19 +183,19 @@ let bigUniforms = THREE.UniformsUtils.merge([
     {
       ambientProduct: {
         type: "v3",
-        value: pointLight.ambient.multiply(0, 0, 1)
+        value: pointLight.ambient.multiply(new THREE.Vector3(0.4, 0.4, 0.4))
       }
     },
     {
       diffuseProduct: {
         type: "v3",
-        value: pointLight.diffuse.multiply(4, 4, 4)
+        value: pointLight.diffuse.multiply(new THREE.Vector3(0.3, 0.3, 0.3))
       }
     },
     {
       specularProduct: {
         type: "v3",
-        value: pointLight.specular.multiply(5, 5, 5)
+        value: pointLight.specular.multiply(new THREE.Vector3(0.6, 0.6, 0.6))
       }
     },
     {
@@ -193,45 +203,27 @@ let bigUniforms = THREE.UniformsUtils.merge([
         type: "float",
         value: 100.0
       }
-    }
+	},
   ])
-
-biMeteorloader.load( 'models/meteors/asteroid/asteroid.obj', function ( mesh ) {
-	let material = new THREE.ShaderMaterial({
-		uniforms: bigUniforms,
-		vertexShader: document.getElementById('big-asteroid-vertex-shader').textContent,
-		fragmentShader: document.getElementById('big-asteroid-fragment-shader').textContent,
-		lights: true
-	})
-	
-	mesh.traverse( function ( child ) {
-		if ( child instanceof THREE.Mesh ) {
-			//child.material = material;
-			child.material.map = bigMeteorTexture;
-		}
-	});
-
-	mesh.scale.set(0.01, 0.01, 0.01);
-	//mesh.position.z = -10;
-	bigMeteor = mesh;
-	bigMeteor.hp = 150;
-	bigMeteor.name = 'meteor1';
-	//scene.add(bigMeteor);
-	meteorsType.push(bigMeteor);
-}, onProgress, onError);
-
 let rockMeteor;
-let rockMeteorTexture = new THREE.TextureLoader().load('/models/meteors/Rock/RockTexture.jpg'); 
 let rockMeteorLoader = new THREE.OBJLoader();
 rockMeteorLoader.load( 'models/meteors/Rock/Rock.obj', function ( mesh ) {
+	 let material = new THREE.ShaderMaterial({
+	 	uniforms: meteorUniforms,
+	 	vertexShader: document.getElementById('asteroid-vertex-shader').textContent,
+	 	fragmentShader: document.getElementById('asteroid-fragment-shader').textContent,
+	 	lights: true
+	 })
 	mesh.traverse( function ( child ) {
 		if ( child instanceof THREE.Mesh ) {
-			child.material.map = rockMeteorTexture;
+			child.material = material;
 		}
 	});
 	rockMeteor = mesh;
 	rockMeteor.hp = 15;
 	rockMeteor.name = 'meteor2';
+	rockMeteor.position.z = -10;
+	//scene.add(rockMeteor)
 	meteorsType.push(rockMeteor);
 }, onProgress, onError);
 
@@ -292,7 +284,7 @@ let customExplosionMaterial = new THREE.ShaderMaterial({
 });
 new THREE.FBXLoader().load('/models/explosion/Explosion.fbx', function(mesh){
 	mesh.mixer = new THREE.AnimationMixer( mesh );
-	mixers.push( mesh.mixer );
+	//mixers.push( mesh.mixer );
 	let action = mesh.mixer.clipAction( mesh.animations[ 0 ] );
 	action.play();
 	mesh.position.z = -10;
@@ -403,7 +395,7 @@ const putMeteor = function(){
 	if(ship && meteorsType.length == 4){
 		let meteorType = Math.randomRange(3, 0);	
 		let newMeteor = meteorsType[meteorType].clone();
-		let start = new THREE.Vector3(shipGroup.position.x, shipGroup.position.y, -110);
+		let start = new THREE.Vector3(Math.randomRange(110, -110), shipGroup.position.y, -110);
 		let controlPoint1 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -80);
 		let controlPoint2 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -40);
 		let end = shipGroup.position;
@@ -439,7 +431,7 @@ const render = function() {
 	}
 
 	meteors.forEach((meteor, index) => {
-		if(meteor.t <= 1.2){
+		if(meteor.t <= 1){
 			meteor.t += 0.02;
 			if(meteor.type != 2) 
 				meteor.path.at(meteor.t, where); 
@@ -474,8 +466,7 @@ const render = function() {
 			mixers[ i ].update( clock.getDelta() );
 		}
 	}
-	
-	if(helper)helper.update();
+
 	renderer.render( scene, camera );
 }
 
