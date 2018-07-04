@@ -80,34 +80,6 @@ let shipLoadingManager = new THREE.LoadingManager( function() {
 	ship.position.z = -15;
 	ship.name = 'falcon';
 	ship.hp = 100;
-	let collider = THREEx.Collider.createFromObject3d(ship)
-	ship.userData.collider = collider
-	
-	scene.add(new THREE.BoxHelper( ship))
-
-	collider.addEventListener('contactEnter', function(otherCollider){
-		if(this.object3d.name == 'falcon' && otherCollider.object3d.name == 'meteor1') {
-			this.object3d.hp -= 100;
-			console.log("meteor impact");
-			//scene.remove(otherCollider.object3d);
-		}
-		if(this.object3d.name == 'falcon' && otherCollider.object3d.name == 'meteor2') {
-			this.object3d.hp -= 30;
-			console.log("meteor impact");
-			//scene.remove(otherCollider.object3d);
-		}
-		if(this.object3d.name == 'falcon' && otherCollider.object3d.name == 'meteor3') {
-			this.object3d.hp -= 15;
-			console.log("meteor impact");
-			//scene.remove(otherCollider.object3d);
-		}
-		if(this.object3d.name == 'falcon' && otherCollider.object3d.name == 'tie') {
-			this.object3d.hp -= 100;
-			console.log("meteor impact");
-			//scene.remove(otherCollider.object3d);
-		}
-	})
-
 	shipGroup.add(ship);
 	scene.add( shipGroup );
 });
@@ -407,16 +379,12 @@ const onMouseDown = function(){
 	let shotR = laserBeam.object3d.clone();
 	shotR.position.set(shipGroup.position.x + 0.5, shipGroup.position.y - 1, shipGroup.position.z - 15);
 	shotR.name = 'shot';
-	let colliderShotR = THREEx.Collider.createFromObject3d(shotR)
-	shotR.userData.collider = colliderShotR
 	scene.add(shotR);
 	arrayShots.push(shotR);
 
 	let shotL = laserBeam.object3d.clone();
 	shotL.position.set(shipGroup.position.x - 0.5, shipGroup.position.y - 1, shipGroup.position.z - 15);
 	shotL.name = 'shot';
-	let colliderShotL = THREEx.Collider.createFromObject3d(shotL)
-	shotL.userData.collider = colliderShotL
 	scene.add(shotL);
 	arrayShots.push(shotL);
 }
@@ -435,25 +403,13 @@ const putMeteor = function(){
 	if(ship && meteorsType.length == 4){
 		let meteorType = Math.randomRange(3, 0);	
 		let newMeteor = meteorsType[meteorType].clone();
-		let start = new THREE.Vector3(Math.randomRange(110, -110) , Math.randomRange(110, -110), -110);
+		let start = new THREE.Vector3(shipGroup.position.x, shipGroup.position.y, -110);
 		let controlPoint1 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -80);
 		let controlPoint2 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -40);
 		let end = shipGroup.position;
 		newMeteor.path = meteorType == 2 ? new THREE.CubicBezierCurve3(start, controlPoint1, controlPoint2, end): new THREE.Line3(start, end);
 		newMeteor.t = 0;
 		newMeteor.type = meteorType;
-		
-		let newMeteorCollider = THREEx.Collider.createFromObject3d(newMeteor)
-		newMeteor.userData.collider = newMeteorCollider
-
-		newMeteorCollider.addEventListener('contactEnter', function(otherCollider){
-			if((this.object3d.name == 'meteor1' || this.object3d.name == 'meteor2' || this.object3d.name == 'meteor3' || this.object3d.name == 'tie') && otherCollider.object3d.name == 'shot'){
-				console.log(this.object3d.name);
-				this.object3d.hp -= 15;
-			}
-				
-		})
-		
 		meteors.push(newMeteor);
 		scene.add(newMeteor);
 	}
@@ -501,19 +457,24 @@ const render = function() {
 			scene.remove(meteor);
 		}
 	});
-	
+
+	//Colisao e calculos 
+	if(ship != undefined && meteorsType.length == 4){
+		ship.collider = new THREE.Box3().setFromObject(ship);
+		meteors.forEach((meteor, index) => {
+			meteor.collider = new THREE.Box3().setFromObject(meteor);
+			arrayShots.forEach((shot, index) => {
+				shot.collider = new THREE.Box3().setFromObject(shot);
+				
+			});
+		});
+	}
 	if ( mixers.length > 0 ) {
 		for ( var i = 0; i < mixers.length; i ++ ) {
 			mixers[ i ].update( clock.getDelta() );
 		}
 	}
-	let colliders	= []
-	scene.traverse(function(object3d){
-		let collider = object3d.userData.collider
-		if( collider === undefined ) return
-		colliders.push( collider )
-	})
-	colliderSystem.computeAndNotify(colliders);
+	
 	if(helper)helper.update();
 	renderer.render( scene, camera );
 }
