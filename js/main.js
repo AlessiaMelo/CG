@@ -1,5 +1,4 @@
 let shipGroup = new THREE.Group();
-let colliderSystem	= new THREEx.ColliderSystem();
 
 
 const onProgress = function ( xhr ) {
