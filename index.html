@@ -16,8 +16,18 @@
 		$( document ).ready(function() {			
 			//gameOver();
 			iniciar(); 
-						
+
+			//Hide key to skip story and stop sound
+			var som = document.getElementById("som");
+			$(document).keypress(function(e){
+				if(e.wich == 104 || e.keyCode == 104){
+					console.log("Story skiped");
+					som.pause();
+					document.getElementById("texts").style.display = "none";
+				}
+			})						
 		});
+
 		</script>
 
 	</head>
@@ -25,55 +35,57 @@
 
 		<canvas id="snow"></canvas>
 
-		<section class="intro intro_texto">
-			A Long Time Ago, in a galaxy far,<br> far away ...    
-		</section>
+		<div id="texts">
 
-		<section class="paragrafos">
-			<div class="historia historia_texto"  id="title">
-				<p class="text-center">Star Wars Episode XX</p>
-				<p class="text-center"></p>
-				<br>
-				<br>
-				<p class="text-center">
-					Han Solo is in trouble (once again) and
-					he is running from Vader squad.
-					And to make the things easier
-					there is a meteor rain in galaxy.
-					Can you help him to stay alive?				
-				</p>
-				<br>
-				<p class="text-center">
-					Use the keys w,a,s,d to move the 
-					Millennium Falcon, press the left button
-					of the mouse to shoot the meteors, and
-					space key to switch your vision of the galaxy. 
-				</p>				
-				<br>
-				<p class="text-center">
-					Here we go!
-				</p> 
-			</div>
-		</section>
+			<section class="intro intro_texto">
+				A Long Time Ago, in a galaxy far,<br> far away ...    
+			</section>
 
-		<audio src="audio/StarWarsTheme.mp3" id="som"></audio>
+			<section class="paragrafos">
+				<div class="historia historia_texto"  id="title">
+					<p class="text-center">Star Wars Episode XX</p>
+					<p class="text-center"></p>
+					<br>
+					<br>
+					<p class="text-center">
+						Han Solo is in trouble (once again) and
+						he is running from Vader squad.
+						And to make the things easier
+						there is a meteor rain in galaxy.
+						Can you help him to stay alive?				
+					</p>
+					<br>
+					<p class="text-center">
+						Use the keys w,a,s,d to move the 
+						Millennium Falcon, press the left button
+						of the mouse to shoot the meteors, and
+						space key to switch your vision of the galaxy. 
+					</p>				
+					<br>
+					<p class="text-center">
+						Here we go!
+					</p> 
+				</div>
+			</section>			
 
-		<section class="gameOver gameOver_texto">
-			Game Over.<br>
-			Solo couldn't scape from Vader...
-		</section>
+			<section class="gameOver gameOver_texto">
+				Game Over.<br>
+				Solo couldn't scape from Vader...
+			</section>
+		</div>
 
 		<div class = "score">
             00
 		</div>
 
-		
+		<audio src="audio/StarWarsTheme.mp3" id="som"></audio>
 		<audio src="audio/ImperialMarch.mp3" id="imperialSound"></audio>
 	
 	<script src="js/scriptOpening.js"></script>
 
-
 	</body>
+
+
 	<script id="vertex-shader" type="x-shader/x-vertex">
 		varying vec3 vNormal;
 		varying vec3 vColor;
@@ -173,5 +185,5 @@
 	<script src='/lib/threex.collidersystem.js'></script>
 	<script src="/lib/ColladaLoader.js"></script>
 	<script src='/lib/TGALoader.js'></script>
-	<!--script src="/js/main.js"></script"-->
+	<script src="/js/main.js"></script>
 </html>

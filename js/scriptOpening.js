@@ -41,14 +41,13 @@ function gameOver() {
 
 var canvas = document.getElementById('snow');
 var ctx = canvas.getContext('2d');
-
 canvas.width = width;
 canvas.height = height;
 
 var num = 100;
 var size = 2;
 var elements = [];
- 
+
 inicio();
 nevar();
 
