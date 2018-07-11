@@ -307,6 +307,7 @@ new THREE.FBXLoader().load('/models/explosion/Explosion.fbx', function(mesh){
 
 
 const onKeydown = function(event){
+	alert(event.keyCode);
 	switch(event.keyCode){
 		case 87:
 			if(shipGroup.position.y < routeOffset)
