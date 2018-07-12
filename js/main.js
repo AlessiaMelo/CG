@@ -310,6 +310,7 @@ new THREE.FBXLoader().load('/models/explosion/Explosion.fbx', function(mesh){
 var countUp = 0;
 var countDown = 0;
 
+//Checar numero das teclas
 const onKeydown = function(event){
 	console.log(countDown + "  " + countUp);
 	switch(event.keyCode){
@@ -319,8 +320,7 @@ const onKeydown = function(event){
 				ship.rotation.x += 0.0025;
 				countUp +=1;
 				countDown -=1;
-			}	
-			
+			}				
 		break;
 		case 40:
 			if(countDown < 20 )	
@@ -328,8 +328,7 @@ const onKeydown = function(event){
 				ship.rotation.x -= 0.0025;	
 				countUp -=1;
 				countDown +=1;
-			}			
-			
+			}				
 		break;
 		case 87:
 			if(shipGroup.position.y < routeOffset)
@@ -372,12 +371,6 @@ const onKeydown = function(event){
 
 const onKeyup = function(event){
 	switch(event.keyCode){		
-		case 40:	
-			ship.rotation.x += 0.0025;
-		break;
-		case 38:			
-			ship.rotation.x -= 0.0025;	
-		break;
 		case 32:
 			if(cameraPosition === 0){
 				camera.position.set(0, 35, 0);
