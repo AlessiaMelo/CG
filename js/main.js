@@ -78,6 +78,8 @@ let shipLoadingManager = new THREE.LoadingManager( function() {
 	ship.scale.y *= shipScale;
 	ship.scale.z *= shipScale;		
 	ship.position.z = -15;
+	ship.position.x = 0;
+	ship.position.y = 0;
 	ship.name = 'falcon';
 	ship.hp = 100;
 	shipGroup.add(ship);
@@ -305,10 +307,30 @@ new THREE.FBXLoader().load('/models/explosion/Explosion.fbx', function(mesh){
 	explosion = mesh;
 }, onProgress, onError)
 
+var countUp = 0;
+var countDown = 0;
 
 const onKeydown = function(event){
-	alert(event.keyCode);
+	console.log(countDown + "  " + countUp);
 	switch(event.keyCode){
+		case 38:
+			if(countUp < 20)	
+			{
+				ship.rotation.x += 0.0025;
+				countUp +=1;
+				countDown -=1;
+			}	
+			
+		break;
+		case 40:
+			if(countDown < 20 )	
+			{
+				ship.rotation.x -= 0.0025;	
+				countUp -=1;
+				countDown +=1;
+			}			
+			
+		break;
 		case 87:
 			if(shipGroup.position.y < routeOffset)
 				shipGroup.position.y += movSpeed;
@@ -349,7 +371,13 @@ const onKeydown = function(event){
 }
 
 const onKeyup = function(event){
-	switch(event.keyCode){
+	switch(event.keyCode){		
+		case 40:	
+			ship.rotation.x += 0.0025;
+		break;
+		case 38:			
+			ship.rotation.x -= 0.0025;	
+		break;
 		case 32:
 			if(cameraPosition === 0){
 				camera.position.set(0, 35, 0);

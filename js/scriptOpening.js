@@ -4,7 +4,7 @@ var height  = window.innerHeight;
 var intro       = document.getElementsByClassName("intro")[0];
 var historia    = document.getElementsByClassName("historia")[0];
 var paragrafos  = document.getElementsByClassName("paragrafos")[0];
-var som         = document.getElementById("som");
+  var som         = document.getElementById("som");
 var imperialSound= document.getElementById("imperialSound");
 var gameOverLetters    = document.getElementsByClassName("gameOver")[0];
 
