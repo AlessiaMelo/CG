@@ -29,8 +29,9 @@ pointLight.ambient = new THREE.Vector3(1.0, 1.0, 1.0);
 pointLight.diffuse = new THREE.Vector3(1.0, 1.0, 1.0);
 pointLight.specular = new THREE.Vector3(1.0, 1.0, 1.0);
 camera.add( pointLight );
-scene.add(camera);
-//shipGroup.add( camera );
+//scene.add(camera);
+shipGroup.add( camera );
+
 
 //Matriz de projeção customizada.
 let tan = Math.tan(Math.radians(camera.getEffectiveFOV()));
@@ -149,7 +150,7 @@ scene.add(shotEffectL);
 let backgroundRotationOffset = 0.002;
 let cameraPosition = 0;
 let movSpeed = 0.5;
-let routeOffset = 50;
+let routeOffset = 150;
 
 //Meteoros
 let meteorsType = [];
@@ -270,7 +271,6 @@ new THREE.TDSLoader().load('/models/tie_fighter/TF_3DS02.3ds', function( mesh ){
 //Explosão
 let explosion;
 let mixers = [];
-let fireTexture = new THREE.TextureLoader().load('/models/explosion/explosion0012.png');
 let customExplosionMaterial = new THREE.ShaderMaterial({
 	uniforms: {
 		color: {type: "vec3", value: new THREE.Color(0xFDA50F)}
@@ -283,9 +283,7 @@ let customExplosionMaterial = new THREE.ShaderMaterial({
 });
 new THREE.FBXLoader().load('/models/explosion/Explosion.fbx', function(mesh){
 	mesh.mixer = new THREE.AnimationMixer( mesh );
-	//mixers.push( mesh.mixer );
-	let action = mesh.mixer.clipAction( mesh.animations[ 0 ] );
-	action.play();
+	mixers.push( mesh.mixer );
 	mesh.position.z = -10;
 	mesh.scale.set(0.03, 0.03, 0.03)
 	mesh.traverse( function ( child ) {
@@ -394,12 +392,13 @@ const putMeteor = function(){
 	if(ship && meteorsType.length == 4){
 		let meteorType = Math.randomRange(3, 0);	
 		let newMeteor = meteorsType[meteorType].clone();
-		let start = new THREE.Vector3(Math.randomRange(110, -110), shipGroup.position.y, -110);
+		let start = new THREE.Vector3(shipGroup.position.x, shipGroup.position.y, -110);
 		let controlPoint1 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -80);
 		let controlPoint2 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -40);
 		let end = shipGroup.position;
 		newMeteor.path = meteorType == 2 ? new THREE.CubicBezierCurve3(start, controlPoint1, controlPoint2, end): new THREE.Line3(start, end);
 		newMeteor.t = 0;
+		newMeteor.hp = meteorType != 3 ? 100 : 350;
 		newMeteor.type = meteorType;
 		meteors.push(newMeteor);
 		scene.add(newMeteor);
@@ -454,9 +453,44 @@ const render = function() {
 		ship.collider = new THREE.Box3().setFromObject(ship);
 		meteors.forEach((meteor, index) => {
 			meteor.collider = new THREE.Box3().setFromObject(meteor);
-			arrayShots.forEach((shot, index) => {
+			if(ship.collider.intersectsBox(meteor.collider)){
+				switch (meteor.type){
+					case 1:
+						ship.hp -= 15;
+						break;
+					case 2:
+						ship.hp -= 45;
+					case 3:
+						ship.hp -= 100;
+				}
+
+				meteors.splice(index, 1);
+				scene.remove(meteor);
+
+				if(ship.hp <= 0){
+					//shipGroup.remove(ship);
+					explodeMeteor = explosion;
+					explodeMeteor.position.x =shipGroup.position.x
+					explodeMeteor.position.y =shipGroup.position.y
+					explodeMeteor.position.z =shipGroup.position.z - 15;
+					let action = explodeMeteor.mixer.clipAction( explodeMeteor.animations[ 0 ] );
+					action.play(explodeMeteor);
+					scene.add(explodeMeteor);
+					mixers.push( explodeMeteor.mixer );
+					console.log('game over');
+				}
+			}
+			arrayShots.forEach((shot, indexShot) => {
 				shot.collider = new THREE.Box3().setFromObject(shot);
-				
+				if(meteor.collider.intersectsBox(shot.collider)){
+					meteor.hp -= 15;
+					if(meteor.hp <= 0){
+						meteors.splice(index, 1);
+						scene.remove(meteor);
+					}
+					arrayShots.splice(indexShot, 1);
+					scene.remove(shot);
+				}	
 			});
 		});
 	}
