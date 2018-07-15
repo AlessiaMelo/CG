@@ -5,9 +5,88 @@
 		<title>Star Wars: Jogo de Navinha</title>
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link rel="stylesheet" href="css/main.css">
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+		<link href="css/style.css" rel="stylesheet">		
+		
+        <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+		
+		<script>
+		$( document ).ready(function() {			
+			//gameOver();
+			iniciar(); 
+
+			//Hide key to skip story and stop sound
+			var som = document.getElementById("som");
+			$(document).keypress(function(e){
+				if(e.wich == 104 || e.keyCode == 104){
+					console.log("Story skiped");
+					som.pause();
+					document.getElementById("title").style = "animation-iteration-count: 0";
+					//document.getElementById("texts").style.display = "none";
+				}
+			})						
+		});
+
+		</script>
+
 	</head>
 	<body>
+
+		<canvas id="snow"></canvas>
+
+		<div id="texts">
+
+			<section class="intro intro_texto">
+				A Long Time Ago, in a galaxy far,<br> far away ...    
+			</section>
+
+			<section class="paragrafos">
+				<div class="historia historia_texto"  id="title">
+					<p class="text-center">Star Wars Episode XX</p>
+					<p class="text-center"></p>
+					<br>
+					<br>
+					<p class="text-center">
+						Han Solo is in trouble (once again) and
+						he is running from Vader squad.
+						And to make the things easier
+						there is a meteor rain in galaxy.
+						Can you help him to stay alive?				
+					</p>
+					<br>
+					<p class="text-center">
+						Use the keys w,a,s,d to move the 
+						Millennium Falcon, press the left button
+						of the mouse to shoot the meteors, and
+						space key to switch your vision of the galaxy. 
+					</p>				
+					<br>
+					<p class="text-center">
+						Here we go!
+					</p> 
+				</div>
+			</section>			
+
+			<section class="gameOver gameOver_texto">
+				Game Over.<br>
+				Solo couldn't scape from Vader...
+			</section>
+		</div>
+
+		<div class = "score">
+            00
+		</div>
+
+		<audio src="audio/StarWarsTheme.mp3" id="som"></audio>
+		<audio src="audio/ImperialMarch.mp3" id="imperialSound"></audio>
+	
+	<script src="js/scriptOpening.js"></script>
+
 	</body>
+
+
 	<script id="vertex-shader" type="x-shader/x-vertex">
 		varying vec3 vNormal;
 		varying vec3 vColor;
