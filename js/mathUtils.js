@@ -7,7 +7,7 @@ Math.radians = function(degrees) {
 Math.degrees = function(radians) {
 	return radians * 180 / Math.PI;
 };
-
+// Devolve um número aleatório dentro de um intervalo.
 Math.randomRange = function(max, min){
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }

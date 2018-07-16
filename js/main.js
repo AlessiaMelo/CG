@@ -296,50 +296,65 @@ new THREE.FBXLoader().load('/models/explosion/Explosion.fbx', function(mesh){
 	explosion = mesh;
 }, onProgress, onError)
 
-var countUp = 0;
-var countDown = 0;
-
+let countUp = 0;
+let countDown = 0;
+let countLeft = 0;
+let countRight = 0;
+let rotationOffset = 0.0075
 //Checar numero das teclas
 const onKeydown = function(event){
-	console.log(countDown + "  " + countUp);
 	switch(event.keyCode){
-		case 38:
-			if(countUp < 20)	
-			{
-				ship.rotation.x += 0.0025;
-				countUp +=1;
-				countDown -=1;
-			}				
-		break;
-		case 40:
-			if(countDown < 20 )	
-			{
-				ship.rotation.x -= 0.0025;	
-				countUp -=1;
-				countDown +=1;
-			}				
-		break;
 		case 87:
-			if(shipGroup.position.y < routeOffset)
+			if(shipGroup.position.y < routeOffset){
 				shipGroup.position.y += movSpeed;
+				if(countUp < 10){
+					ship.rotation.x += rotationOffset;
+					engineCylinder.rotation.x -= 1.5 * rotationOffset
+					engineSphere.rotation.x -= 1.5 * rotationOffset
+					countUp +=1;
+					countDown -=1;
+				}
+			}
 			else
 				console.log("volte para a rota");
 		break;
 		case 68:
-			if(shipGroup.position.x < routeOffset)
+			if(shipGroup.position.x < routeOffset){
 				shipGroup.position.x += movSpeed;
+				if(countRight < 10){
+					ship.rotation.z -= rotationOffset;
+					engineSphere.rotation.z += 2.5 * rotationOffset
+					countRight +=1;
+					countLeft -=1;
+				}
+			}
 			else
 				console.log("volte para a rota");
 		break;
 		case 83:
-			if(shipGroup.position.y > -routeOffset)
+			if(shipGroup.position.y > -routeOffset){
+				if(countDown < 10 ){
+					ship.rotation.x -= rotationOffset;	
+					engineCylinder.rotation.x += 1.5 * rotationOffset
+					engineSphere.rotation.x += 1.5 * rotationOffset
+					countUp -=1;
+					countDown +=1;
+				}
 				shipGroup.position.y -= movSpeed;
+			}
 			else
 				console.log("volte para a rota");
 		break;
 		case 65:
-			if(shipGroup.position.x > -routeOffset)
+			if(shipGroup.position.x > -routeOffset){
 				shipGroup.position.x -= movSpeed;
+				if(countLeft < 10){
+					ship.rotation.z += rotationOffset;
+					engineSphere.rotation.z -= 2.5 * rotationOffset
+					countRight -=1;
+					countLeft +=1;
+				}
+			}
 			else
 				console.log("volte para a rota");
 		break;
@@ -380,9 +395,10 @@ const onKeyup = function(event){
 		break;
 	}
 }
-
+let recoil = 10;
 let blink = 0;
 const onMouseDown = function(){
+	if(recoil <= 7) return
 	shotEffectR.position.set(shipGroup.position.x + 0.5, shipGroup.position.y - 0.5, shipGroup.position.z - 15);
 	shotEffectL.position.set(shipGroup.position.x - 0.5, shipGroup.position.y - 0.5, shipGroup.position.z - 15);
 	blink = 0;
@@ -398,6 +414,7 @@ const onMouseDown = function(){
 	shotL.name = 'shot';
 	scene.add(shotL);
 	arrayShots.push(shotL);
+	recoil = 0;
 }
 
 const onWindowResize = function () {
@@ -411,7 +428,7 @@ const onWindowResize = function () {
 let meteors = [];
 let where = new THREE.Vector3();
 const putMeteor = function(){
-	if(ship && meteorsType.length == 4){
+	if(loaded()){
 		let meteorType = Math.randomRange(3, 0);	
 		let newMeteor = meteorsType[meteorType].clone();
 		let start = new THREE.Vector3(shipGroup.position.x, shipGroup.position.y, -110);
@@ -427,8 +444,22 @@ const putMeteor = function(){
 	}
 }
 
+let textCount = 0;
+const loaded = function(){
+	if(ship != undefined && meteorsType.length == 4 && textCount > 800)
+		return true
+	return false 
+}
+
+const enableSkip = function(){
+	if(ship != undefined && meteorsType.length == 4)
+		return true
+	return false 
+}
+
 let clock = new THREE.Clock();
-setInterval(putMeteor,5000);
+setInterval(putMeteor,3000);
+let score = 0;
 const render = function() {
 	requestAnimationFrame( render );
 	spacesphere.rotation.x -= backgroundRotationOffset;
@@ -449,29 +480,28 @@ const render = function() {
 		shotEffectL.position.set(10, 10, 10);
 		blink = 0;
 	}
-
-	meteors.forEach((meteor, index) => {
-		if(meteor.t <= 1){
-			meteor.t += 0.02;
-			if(meteor.type != 2) 
-				meteor.path.at(meteor.t, where); 
-			else 
-				meteor.path.getPoint(meteor.t, where);
-			
-			meteor.position.x = where.x;
-			meteor.position.y = where.y;
-			meteor.position.z = where.z;
-			meteor.rotation.x += 0.07;
-			meteor.rotation.y += 0.05;
-		}
-		else{
-			meteors.splice(index, 1);
-			scene.remove(meteor);
-		}
-	});
-
 	//Colisao e calculos 
-	if(ship != undefined && meteorsType.length == 4){
+	if(loaded()){
+		meteors.forEach((meteor, index) => {
+			if(meteor.t <= 1){
+				meteor.t += 0.02;
+				if(meteor.type != 2) 
+					meteor.path.at(meteor.t, where); 
+				else 
+					meteor.path.getPoint(meteor.t, where);
+				
+				meteor.position.x = where.x;
+				meteor.position.y = where.y;
+				meteor.position.z = where.z;
+				meteor.rotation.x += 0.07;
+				meteor.rotation.y += 0.05;
+			}
+			else{
+				meteors.splice(index, 1);
+				scene.remove(meteor);
+			}
+		})	
+
 		ship.collider = new THREE.Box3().setFromObject(ship);
 		meteors.forEach((meteor, index) => {
 			meteor.collider = new THREE.Box3().setFromObject(meteor);
@@ -482,15 +512,17 @@ const render = function() {
 						break;
 					case 2:
 						ship.hp -= 45;
+						break;
 					case 3:
 						ship.hp -= 100;
+						break;
 				}
 
 				meteors.splice(index, 1);
 				scene.remove(meteor);
 
 				if(ship.hp <= 0){
-					//shipGroup.remove(ship);
+					shipGroup.remove(ship);
 					explodeMeteor = explosion;
 					explodeMeteor.position.x =shipGroup.position.x
 					explodeMeteor.position.y =shipGroup.position.y
@@ -499,29 +531,43 @@ const render = function() {
 					action.play(explodeMeteor);
 					scene.add(explodeMeteor);
 					mixers.push( explodeMeteor.mixer );
-					console.log('game over');
+					gameOver();
 				}
 			}
 			arrayShots.forEach((shot, indexShot) => {
 				shot.collider = new THREE.Box3().setFromObject(shot);
 				if(meteor.collider.intersectsBox(shot.collider)){
-					meteor.hp -= 15;
-					if(meteor.hp <= 0){
-						meteors.splice(index, 1);
-						scene.remove(meteor);
-					}
+					meteor.hp -= 30;
 					arrayShots.splice(indexShot, 1);
 					scene.remove(shot);
+					if(meteor.hp <= 0){
+						scene.remove(meteor);
+						switch (meteor.type){
+							case 1:
+								score += 50;
+								break;
+							case 2:
+								score += 100;
+								break;
+							case 3:
+								score += 500;
+								break;
+						}
+						meteors.splice(index, 1);
+					}
 				}	
 			});
 		});
 	}
-	if ( mixers.length > 0 ) {
+	if (mixers.length > 0){
 		for ( var i = 0; i < mixers.length; i ++ ) {
 			mixers[ i ].update( clock.getDelta() );
 		}
 	}
-
+	textCount++;
+	recoil++;
+	if(loaded())score++;
+	document.getElementsByClassName("score")[0].innerHTML = score;
 	renderer.render( scene, camera );
 }
 
