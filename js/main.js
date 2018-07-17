@@ -403,17 +403,22 @@ const onMouseDown = function(){
 	shotEffectL.position.set(shipGroup.position.x - 0.5, shipGroup.position.y - 0.5, shipGroup.position.z - 15);
 	blink = 0;
 
-	let shotR = laserBeam.object3d.clone();
-	shotR.position.set(shipGroup.position.x + 0.5, shipGroup.position.y - 1, shipGroup.position.z - 15);
-	shotR.name = 'shot';
-	scene.add(shotR);
-	arrayShots.push(shotR);
-
-	let shotL = laserBeam.object3d.clone();
-	shotL.position.set(shipGroup.position.x - 0.5, shipGroup.position.y - 1, shipGroup.position.z - 15);
-	shotL.name = 'shot';
-	scene.add(shotL);
-	arrayShots.push(shotL);
+	let shot = laserBeam.object3d.clone();
+	//shotR.position.set(shipGroup.position.x + 0.5, shipGroup.position.y - 1, shipGroup.position.z - 15);
+	let start = new THREE.Vector3(shipGroup.position.x + 0.5, shipGroup.position.y - 1, shipGroup.position.z -15);
+	let end = new THREE.Vector3(shipGroup.position.x + 0.5, shipGroup.position.y - 1, -250);
+	shot.path = new THREE.Line3(start, end);
+	shot.t = 0;
+	scene.add(shot);
+	arrayShots.push(shot);
+	
+	shot = laserBeam.object3d.clone();
+	start = new THREE.Vector3(shipGroup.position.x - 0.5, shipGroup.position.y - 1, shipGroup.position.z - 15);
+	end = new THREE.Vector3(shipGroup.position.x - 0.5, shipGroup.position.y - 1, -250);
+	shot.path = new THREE.Line3(start, end);
+	shot.t = 0;
+	scene.add(shot);
+	arrayShots.push(shot);
 	recoil = 0;
 }
 
@@ -437,7 +442,6 @@ const putMeteor = function(){
 		let end = shipGroup.position;
 		newMeteor.path = meteorType == 2 ? new THREE.CubicBezierCurve3(start, controlPoint1, controlPoint2, end): new THREE.Line3(start, end);
 		newMeteor.t = 0;
-		newMeteor.hp = meteorType != 3 ? 100 : 350;
 		newMeteor.type = meteorType;
 		meteors.push(newMeteor);
 		scene.add(newMeteor);
@@ -457,22 +461,43 @@ const enableSkip = function(){
 	return false 
 }
 
+const tieShot = function(){
+	if(loaded()){
+		meteors.forEach((meteor, index) => {
+			if(meteor.type == 2){
+				let shot = laserBeam.object3d.clone()
+				let start = meteor.position
+				let end = new THREE.Vector3(shipGroup.position.x, shipGroup.position.y, shipGroup.position.z - 20)
+				shot.path = new THREE.Line3(start, end);
+				shot.t = 0;
+				scene.add(shot);
+				arrayShots.push(shot);		
+			}
+		})
+	}
+}
+
 let clock = new THREE.Clock();
 setInterval(putMeteor,3000);
+setInterval(tieShot, 10000)
 let score = 0;
 const render = function() {
 	requestAnimationFrame( render );
 	spacesphere.rotation.x -= backgroundRotationOffset;
 	
 	arrayShots.forEach((shot,index) => {
-		if(shot.position.z > -257) {
-			shot.position.z -= 5;
+		if(shot.t <= 1) {
+			shot.t += 0.03
+			shot.enemy = true;
+			shot.path.at(shot.t, where); 
+			shot.position.x = where.x;
+			shot.position.y = where.y;
+			shot.position.z = where.z;	
 		}
 		else{
 			arrayShots.splice(index, 1);
 			scene.remove(shot);
 		}
-			 
 	});
 
 	if(++blink === 2){
@@ -483,18 +508,23 @@ const render = function() {
 	//Colisao e calculos 
 	if(loaded()){
 		meteors.forEach((meteor, index) => {
-			if(meteor.t <= 1){
+			if(meteor.t <= 1 && meteor.type != 2){
 				meteor.t += 0.02;
-				if(meteor.type != 2) 
-					meteor.path.at(meteor.t, where); 
-				else 
-					meteor.path.getPoint(meteor.t, where);
-				
+				meteor.path.at(meteor.t, where); 
 				meteor.position.x = where.x;
 				meteor.position.y = where.y;
 				meteor.position.z = where.z;
 				meteor.rotation.x += 0.07;
 				meteor.rotation.y += 0.05;
+			}
+			else if(meteor.t <= 1 && meteor.type == 2){
+				meteor.t += 0.05;
+				meteor.path.getPoint(meteor.t, where)
+				meteor.position.x = where.x;
+				meteor.position.y = where.y;
+				meteor.position.z = where.z;
+				meteor.rotation.x += 0.05;
+				meteor.rotation.y += 0.03;
 			}
 			else{
 				meteors.splice(index, 1);
@@ -507,11 +537,14 @@ const render = function() {
 			meteor.collider = new THREE.Box3().setFromObject(meteor);
 			if(ship.collider.intersectsBox(meteor.collider)){
 				switch (meteor.type){
+					case 0:
+						ship.hp -= 5;
+						break;
 					case 1:
 						ship.hp -= 15;
 						break;
 					case 2:
-						ship.hp -= 45;
+						ship.hp -= 100;
 						break;
 					case 3:
 						ship.hp -= 100;
@@ -520,19 +553,6 @@ const render = function() {
 
 				meteors.splice(index, 1);
 				scene.remove(meteor);
-
-				if(ship.hp <= 0){
-					shipGroup.remove(ship);
-					explodeMeteor = explosion;
-					explodeMeteor.position.x =shipGroup.position.x
-					explodeMeteor.position.y =shipGroup.position.y
-					explodeMeteor.position.z =shipGroup.position.z - 15;
-					let action = explodeMeteor.mixer.clipAction( explodeMeteor.animations[ 0 ] );
-					action.play(explodeMeteor);
-					scene.add(explodeMeteor);
-					mixers.push( explodeMeteor.mixer );
-					gameOver();
-				}
 			}
 			arrayShots.forEach((shot, indexShot) => {
 				shot.collider = new THREE.Box3().setFromObject(shot);
@@ -543,6 +563,9 @@ const render = function() {
 					if(meteor.hp <= 0){
 						scene.remove(meteor);
 						switch (meteor.type){
+							case 0:
+								score += 25;
+								break;
 							case 1:
 								score += 50;
 								break;
@@ -556,7 +579,28 @@ const render = function() {
 						meteors.splice(index, 1);
 					}
 				}	
+
+				if(ship.collider.intersectsBox(shot.collider) && shot.enemy){
+					ship.hp -= 30;
+					arrayShots.splice(indexShot, 1);
+					scene.remove(shot);
+				}	
 			});
+
+			if(ship.hp <= 0){
+				shipGroup.remove(ship);
+				shipGroup.remove(engineCylinder);
+				shipGroup.remove(engineSphere);
+				explodeMeteor = explosion;
+				explodeMeteor.position.x =shipGroup.position.x
+				explodeMeteor.position.y =shipGroup.position.y
+				explodeMeteor.position.z =shipGroup.position.z - 15;
+				let action = explodeMeteor.mixer.clipAction( explodeMeteor.animations[ 0 ] );
+				action.play(explodeMeteor);
+				scene.add(explodeMeteor);
+				mixers.push( explodeMeteor.mixer );
+				gameOver();
+			}
 		});
 	}
 	if (mixers.length > 0){
