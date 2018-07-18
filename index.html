@@ -21,11 +21,15 @@
 			$(document).keypress(function(e){
 				if(e.wich == 104 || e.keyCode == 104){
 					console.log("Story skiped");
-					som.pause();
-					document.getElementById("title").style = "animation-iteration-count: 0";
-					//document.getElementById("texts").style.display = "none";
+					
 				}
-			})						
+			})
+			
+			$("#skipBtn").click(function(){
+				som.pause();
+				document.getElementById("title").style = "animation-iteration-count: 0";
+				document.getElementById("skipBtn").style.display = "none";
+			});
 		});
 		</script>
 
@@ -74,7 +78,7 @@
 		</div>
 
 		<div class = "score"></div>
-		<div class="skip">H to Skip</button>
+		<button class="skip" id="skipBtn">Skip ></button>
 		<audio src="audio/StarWarsTheme.mp3" id="som"></audio>
 		<audio src="audio/ImperialMarch.mp3" id="imperialSound"></audio>
 	
