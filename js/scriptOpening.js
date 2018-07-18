@@ -32,9 +32,13 @@ function iniciar() {
 }
 
 
-function gameOver() {
+function gameOver(score) {
   imperialSound.play();  
-  gameOverLetters.className = 'gameOver gameOver_texto gameOver_animacao';    
+  window.removeEventListener('mousedown', onMouseDown, false);
+  document.getElementById("gameOverInfo").innerHTML = "Game Over.<br> Your final score is " + score;  
+  document.getElementById("gameOverInfo").style.display = "block";
+  gameOverLetters.className = 'gameOver gameOver_texto gameOver_animacao';  
+  document.getElementById("playAgainBtn").style.display = "block";   
 }
 
 /* Fundo de estrelas */

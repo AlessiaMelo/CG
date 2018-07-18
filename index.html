@@ -13,23 +13,11 @@
 		
 		<script>
 		$( document ).ready(function() {			
-			//gameOver();
 			iniciar(); 
 
 			//Hide key to skip story and stop sound
-			var som = document.getElementById("som");
-			$(document).keypress(function(e){
-				if(e.wich == 104 || e.keyCode == 104){
-					console.log("Story skiped");
-					
-				}
-			})
+			var som = document.getElementById("som");						
 			
-			$("#skipBtn").click(function(){
-				som.pause();
-				document.getElementById("title").style = "animation-iteration-count: 0";
-				document.getElementById("skipBtn").style.display = "none";
-			});
 		});
 		</script>
 
@@ -71,14 +59,14 @@
 				</div>
 			</section>			
 
-			<section class="gameOver gameOver_texto">
-				Game Over.<br>
-				Solo couldn't scape from Vader...
-			</section>
+			<section id="gameOverInfo" class="gameOver gameOver_texto">	</section>
 		</div>
 
-		<div class = "score"></div>
-		<button class="skip" id="skipBtn">Skip ></button>
+		<div class = "score">0</div>
+		<div class = "score" id="hp"> HP:100</div>
+		<div class = "route" id="routeDiv" style="display: none;">Volte para a rota</div>
+		<button class="skip" id="skipBtn" style="display: none;">Skip ></button>
+		<button class="skip" id="playAgainBtn" style="display: none;">Play Again</button>
 		<audio src="audio/StarWarsTheme.mp3" id="som"></audio>
 		<audio src="audio/ImperialMarch.mp3" id="imperialSound"></audio>
 	

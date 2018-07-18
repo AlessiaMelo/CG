@@ -1,3 +1,40 @@
+let textCount = 0;
+let playing = false;
+let score = 0;
+let cameraPosition = 0;
+
+$("#skipBtn").click(function(){
+	som.pause();
+	document.getElementById("title").style = "animation-iteration-count: 0";
+	document.getElementById("skipBtn").style.display = "none";
+	textCount = 800;
+});
+
+$("#playAgainBtn").click(function(){	
+	document.getElementById("playAgainBtn").style.display = "none";
+	document.getElementById("gameOverInfo").style.display = "none";
+	window.addEventListener('mousedown', onMouseDown, false);
+	imperialSound.pause();  
+	textCount = 800;
+	score = 0;
+	shipGroup.add(ship);	
+	mixers[0].stopAllAction();
+	scene.remove(explodeMeteor);
+	ship.hp = 100;
+	document.getElementById("hp").innerHTML = "HP: " + ship.hp;
+
+	if (cameraPosition === 0 )
+	{
+		shipGroup.add(engineCylinder);		
+	}
+	else{
+		shipGroup.add(engineSphere);
+	}
+
+
+});
+
+
 let shipGroup = new THREE.Group();
 
 
@@ -80,6 +117,7 @@ let shipLoadingManager = new THREE.LoadingManager( function() {
 	ship.hp = 100;
 	shipGroup.add(ship);
 	scene.add( shipGroup );
+	window.addEventListener('mousedown', onMouseDown, false);
 });
 let shipLoader = new THREE.ColladaLoader( shipLoadingManager );
 shipLoader.load('/models/Falcon01/model.dae', function ( collada ) {
@@ -150,7 +188,6 @@ shotEffectL.position.set(10, 10, 10);
 scene.add(shotEffectL);
 
 let backgroundRotationOffset = 0.002;
-let cameraPosition = 0;
 let movSpeed = 0.5;
 let routeOffset = 150;
 
@@ -183,6 +220,7 @@ biMeteorloader.load( 'models/meteors/asteroid/asteroid.obj', function ( mesh ) {
 	bigMeteor.hp = 150;
 	bigMeteor.name = 'meteor1';
 	meteorsType.push(bigMeteor);
+	document.getElementById("skipBtn").style.display = "block";	
 }, onProgress, onError);
 
 let meteorUniforms = THREE.UniformsUtils.merge([
@@ -236,6 +274,7 @@ rockMeteorLoader.load( 'models/meteors/Rock/Rock.obj', function ( mesh ) {
 	rockMeteor.hp = 15;
 	rockMeteor.name = 'meteor2';
 	rockMeteor.position.z = -10;
+	rockMeteor.scale.set(2.5, 2.5, 2.5);
 	//scene.add(rockMeteor)
 	meteorsType.push(rockMeteor);
 }, onProgress, onError);
@@ -296,6 +335,7 @@ let customExplosionMaterial = new THREE.ShaderMaterial({
 });
 new THREE.FBXLoader().load('/models/explosion/Explosion.fbx', function(mesh){
 	mesh.mixer = new THREE.AnimationMixer( mesh );
+	mesh.mixer.timeScale = 2;
 	mixers.push( mesh.mixer );
 	mesh.position.z = -10;
 	mesh.scale.set(0.3, 0.3, 0.3)
@@ -333,9 +373,13 @@ const onKeydown = function(event){
 					countUp +=1;
 					countDown -=1;
 				}
+				document.getElementById("routeDiv").style.display = "none";
 			}
 			else
-				console.log("volte para a rota");
+			{
+				document.getElementById("routeDiv").style.display = "inline-block";
+			}
+				
 		break;
 		case 68:
 			if(shipGroup.position.x < routeOffset){
@@ -345,10 +389,13 @@ const onKeydown = function(event){
 					engineSphere.rotation.z += 2.5 * rotationOffset
 					countRight +=1;
 					countLeft -=1;
+					document.getElementById("routeDiv").style.display = "none";
 				}
 			}
 			else
-				console.log("volte para a rota");
+			{
+				document.getElementById("routeDiv").style.display = "inline-block";
+			}
 		break;
 		case 83:
 			if(shipGroup.position.y > -routeOffset){
@@ -360,9 +407,12 @@ const onKeydown = function(event){
 					countDown +=1;
 				}
 				shipGroup.position.y -= movSpeed;
+				document.getElementById("routeDiv").style.display = "none";
 			}
 			else
-				console.log("volte para a rota");
+			{
+				document.getElementById("routeDiv").style.display = "inline-block";
+			}
 		break;
 		case 65:
 			if(shipGroup.position.x > -routeOffset){
@@ -373,21 +423,34 @@ const onKeydown = function(event){
 					countRight -=1;
 					countLeft +=1;
 				}
+				document.getElementById("routeDiv").style.display = "none";
 			}
 			else
-				console.log("volte para a rota");
+			{
+				document.getElementById("routeDiv").style.display = "inline-block";
+			}
 		break;
 		case 81:
 			if(shipGroup.position.z > -routeOffset)
+			{
 				shipGroup.position.z -= movSpeed;
+			document.getElementById("routeDiv").style.display = "none";
+			}
 			else
-				console.log("volte para a rota");
+			{
+				document.getElementById("routeDiv").style.display = "inline-block";
+			}
 		break;
 		case 69:
 			if(shipGroup.position.z < -5)
+			{
 				shipGroup.position.z += movSpeed;
+				document.getElementById("routeDiv").style.display = "none";
+			}
 			else
-				console.log("volte para a rota");
+			{
+				document.getElementById("routeDiv").style.display = "inline-block";
+			}
 		break;
 	}
 }
@@ -460,6 +523,23 @@ const putMeteor = function(){
 	if(loaded()){
 		let meteorType = Math.randomRange(3, 0);	
 		let newMeteor = meteorsType[meteorType].clone();
+		
+		switch(meteorType)
+		{
+			case 0:
+				newMeteor.hp = 15;
+			break;
+			case 1:
+				newMeteor.hp = 70;
+			break;
+			case 2:
+				newMeteor.hp = 1;
+			break;
+			case 3:
+				newMeteor.hp = 500;
+			break;
+		}
+
 		let start = new THREE.Vector3(shipGroup.position.x, shipGroup.position.y, -110);
 		let controlPoint1 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -80);
 		let controlPoint2 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -40);
@@ -469,12 +549,12 @@ const putMeteor = function(){
 		newMeteor.type = meteorType;
 		meteors.push(newMeteor);
 		scene.add(newMeteor);
+		console.log(newMeteor.hp);
 	}
 }
 
-let textCount = 0;
 const loaded = function(){
-	if(ship != undefined && meteorsType.length == 4 && textCount > 800){
+	if(ship != undefined && meteorsType.length == 4 && playing){
 		return true
 		
 	}
@@ -503,14 +583,14 @@ const tieShot = function(){
 let clock = new THREE.Clock();
 setInterval(putMeteor,5000);
 setInterval(tieShot, 7000)
-let score = 0;
+
 const render = function() {
 	requestAnimationFrame( render );
 	spacesphere.rotation.x -= backgroundRotationOffset;
 	
 	arrayShots.forEach((shot,index) => {
 		if(shot.t <= 1) {
-			shot.t += 0.07
+			shot.t += 0.02
 			shot.enemy = true;
 			shot.path.at(shot.t, where); 
 			shot.position.x = where.x;
@@ -532,22 +612,22 @@ const render = function() {
 	if(loaded()){
 		meteors.forEach((meteor, index) => {
 			if(meteor.t <= 1 && meteor.type != 2){
-				meteor.t += 0.02;
+				meteor.t += 0.01;
 				meteor.path.at(meteor.t, where); 
 				meteor.position.x = where.x;
 				meteor.position.y = where.y;
 				meteor.position.z = where.z;
-				meteor.rotation.x += 0.07;
-				meteor.rotation.y += 0.05;
+				meteor.rotation.x += 0.007;
+				meteor.rotation.y += 0.005;
 			}
 			else if(meteor.t <= 1 && meteor.type == 2){
-				meteor.t += 0.05;
+				meteor.t += 0.002;
 				meteor.path.getPoint(meteor.t, where)
 				meteor.position.x = where.x;
 				meteor.position.y = where.y;
 				meteor.position.z = where.z;
-				meteor.rotation.x += 0.05;
-				meteor.rotation.y += 0.03;
+				meteor.rotation.x += 0.005;
+				meteor.rotation.y += 0.003;
 			}
 			else{
 				meteors.splice(index, 1);
@@ -573,14 +653,15 @@ const render = function() {
 						ship.hp -= 100;
 						break;
 				}
-
+				document.getElementById("hp").innerHTML = "HP: " + ship.hp;
 				meteors.splice(index, 1);
 				scene.remove(meteor);
 			}
 			arrayShots.forEach((shot, indexShot) => {
 				shot.collider = new THREE.Box3().setFromObject(shot);
 				if(meteor.collider.intersectsBox(shot.collider)){
-					meteor.hp -= 30;
+					meteor.hp -= 50;
+					console.log(meteor.hp);
 					arrayShots.splice(indexShot, 1);
 					scene.remove(shot);
 					if(meteor.hp <= 0){
@@ -593,7 +674,7 @@ const render = function() {
 								score += 50;
 								break;
 							case 2:
-								score += 100;
+								score += 1000;
 								break;
 							case 3:
 								score += 500;
@@ -605,6 +686,7 @@ const render = function() {
 
 				if(ship.collider.intersectsBox(shot.collider) && shot.enemy){
 					ship.hp -= 30;
+					document.getElementById("hp").innerHTML = "HP: " + ship.hp;
 					arrayShots.splice(indexShot, 1);
 					scene.remove(shot);
 				}	
@@ -623,19 +705,29 @@ const render = function() {
 				scene.add(explodeMeteor);
 				mixers.push( explodeMeteor.mixer );
 				ambientAudio.pause();
-				gameOver();
+				playing = false;
+				meteors.forEach(function(element) {
+					scene.remove(element);
+				}, this);
+				meteors = [];
+				gameOver(score);
 			}
 		});
 	}
 	if (mixers.length > 0){
 		for ( var i = 0; i < mixers.length; i ++ ) {
-			mixers[ i ].update( clock.getDelta() );
+			mixers[ i ].update( clock.getDelta() );			
 		}
-	}
+	}	
+	
+	if(textCount == 800) 
+	{
+		ambientAudio.play();
+		playing = true;		
+	}	
 	textCount++;
-	if(textCount == 800) ambientAudio.play()
 	recoil++;
-	if(loaded())score++;
+	if(loaded() && playing )score++;
 	document.getElementsByClassName("score")[0].innerHTML = score;
 	renderer.render( scene, camera );
 }
@@ -643,5 +735,5 @@ const render = function() {
 window.addEventListener('resize', onWindowResize, false);
 window.addEventListener('keyup', onKeyup, false);
 window.addEventListener('keydown', onKeydown, false);
-window.addEventListener('mousedown', onMouseDown, false);
+
 render();
