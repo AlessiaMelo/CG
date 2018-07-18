@@ -154,6 +154,17 @@ let cameraPosition = 0;
 let movSpeed = 0.5;
 let routeOffset = 150;
 
+//Ambient Audio
+let listener = new THREE.AudioListener();
+camera.add(listener);
+let audioLoader = new THREE.AudioLoader();
+let ambientAudio = new THREE.Audio(listener);
+audioLoader.load( 'audio/ambient.ogg', function( buffer ) {
+	ambientAudio.setBuffer(buffer);
+	ambientAudio.setLoop(true);
+	ambientAudio.setVolume(0.6);
+});
+
 //Meteoros
 let meteorsType = [];
 let bigMeteor;
@@ -287,7 +298,7 @@ new THREE.FBXLoader().load('/models/explosion/Explosion.fbx', function(mesh){
 	mesh.mixer = new THREE.AnimationMixer( mesh );
 	mixers.push( mesh.mixer );
 	mesh.position.z = -10;
-	mesh.scale.set(0.03, 0.03, 0.03)
+	mesh.scale.set(0.3, 0.3, 0.3)
 	mesh.traverse( function ( child ) {
 			if ( child instanceof THREE.Mesh ) {
 				child.material= customExplosionMaterial;
@@ -295,6 +306,14 @@ new THREE.FBXLoader().load('/models/explosion/Explosion.fbx', function(mesh){
 		});
 	explosion = mesh;
 }, onProgress, onError)
+
+//Blast Sounds
+let blasts = [];
+let i
+for(i = 0; i < 10; i++){
+	blasts.push(new Audio('/audio/blast.mp3'))
+	
+}
 
 let countUp = 0;
 let countDown = 0;
@@ -397,14 +416,14 @@ const onKeyup = function(event){
 }
 let recoil = 10;
 let blink = 0;
+let blastIndex = 0;
 const onMouseDown = function(){
-	if(recoil <= 7) return
+	if(recoil <= 5) return
 	shotEffectR.position.set(shipGroup.position.x + 0.5, shipGroup.position.y - 0.5, shipGroup.position.z - 15);
 	shotEffectL.position.set(shipGroup.position.x - 0.5, shipGroup.position.y - 0.5, shipGroup.position.z - 15);
 	blink = 0;
 
 	let shot = laserBeam.object3d.clone();
-	//shotR.position.set(shipGroup.position.x + 0.5, shipGroup.position.y - 1, shipGroup.position.z - 15);
 	let start = new THREE.Vector3(shipGroup.position.x + 0.5, shipGroup.position.y - 1, shipGroup.position.z -15);
 	let end = new THREE.Vector3(shipGroup.position.x + 0.5, shipGroup.position.y - 1, -250);
 	shot.path = new THREE.Line3(start, end);
@@ -419,6 +438,11 @@ const onMouseDown = function(){
 	shot.t = 0;
 	scene.add(shot);
 	arrayShots.push(shot);
+	blasts[blastIndex].volume = 0.2;
+	blasts[blastIndex].play();
+	blastIndex++;
+	blastIndex %= blasts.length;
+
 	recoil = 0;
 }
 
@@ -450,17 +474,12 @@ const putMeteor = function(){
 
 let textCount = 0;
 const loaded = function(){
-	if(ship != undefined && meteorsType.length == 4 && textCount > 800)
+	if(ship != undefined && meteorsType.length == 4 && textCount > 800){
 		return true
+		
+	}
 	return false 
 }
-
-const enableSkip = function(){
-	if(ship != undefined && meteorsType.length == 4)
-		return true
-	return false 
-}
-
 const tieShot = function(){
 	if(loaded()){
 		meteors.forEach((meteor, index) => {
@@ -471,15 +490,19 @@ const tieShot = function(){
 				shot.path = new THREE.Line3(start, end);
 				shot.t = 0;
 				scene.add(shot);
-				arrayShots.push(shot);		
+				arrayShots.push(shot);
+				blasts[blastIndex].volume = 0.1;
+				blasts[blastIndex].play();
+				blastIndex++;
+				blastIndex %= blasts.length;
 			}
 		})
 	}
 }
 
 let clock = new THREE.Clock();
-setInterval(putMeteor,3000);
-setInterval(tieShot, 10000)
+setInterval(putMeteor,5000);
+setInterval(tieShot, 7000)
 let score = 0;
 const render = function() {
 	requestAnimationFrame( render );
@@ -487,7 +510,7 @@ const render = function() {
 	
 	arrayShots.forEach((shot,index) => {
 		if(shot.t <= 1) {
-			shot.t += 0.03
+			shot.t += 0.07
 			shot.enemy = true;
 			shot.path.at(shot.t, where); 
 			shot.position.x = where.x;
@@ -599,6 +622,7 @@ const render = function() {
 				action.play(explodeMeteor);
 				scene.add(explodeMeteor);
 				mixers.push( explodeMeteor.mixer );
+				ambientAudio.pause();
 				gameOver();
 			}
 		});
@@ -609,6 +633,7 @@ const render = function() {
 		}
 	}
 	textCount++;
+	if(textCount == 800) ambientAudio.play()
 	recoil++;
 	if(loaded())score++;
 	document.getElementsByClassName("score")[0].innerHTML = score;
