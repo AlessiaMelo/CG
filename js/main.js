@@ -188,7 +188,7 @@ shotEffectL.position.set(10, 10, 10);
 scene.add(shotEffectL);
 
 let backgroundRotationOffset = 0.002;
-let movSpeed = 0.5;
+let movSpeed = 2;
 let routeOffset = 150;
 
 //Ambient Audio
@@ -540,16 +540,16 @@ const putMeteor = function(){
 			break;
 		}
 
-		let start = new THREE.Vector3(shipGroup.position.x, shipGroup.position.y, -110);
-		let controlPoint1 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -80);
-		let controlPoint2 = new THREE.Vector3(Math.randomRange(110, -110) ,Math.randomRange(110, -110), -40);
+		let start =  meteorType == 2 ? new THREE.Vector3(shipGroup.position.x, shipGroup.position.y, -60) : new THREE.Vector3(Math.randomRange(110, -110), shipGroup.position.y, -110)
+		let controlPoint1 = new THREE.Vector3(Math.randomRange(50, -50) ,Math.randomRange(50, -50), -40);
+		let controlPoint2 = new THREE.Vector3(Math.randomRange(50, -50) ,Math.randomRange(50, -50), -20);
 		let end = shipGroup.position;
 		newMeteor.path = meteorType == 2 ? new THREE.CubicBezierCurve3(start, controlPoint1, controlPoint2, end): new THREE.Line3(start, end);
 		newMeteor.t = 0;
 		newMeteor.type = meteorType;
 		meteors.push(newMeteor);
 		scene.add(newMeteor);
-		console.log(newMeteor.hp);
+		console.log(newMeteor.type);
 	}
 }
 
@@ -581,8 +581,8 @@ const tieShot = function(){
 }
 
 let clock = new THREE.Clock();
-setInterval(putMeteor,5000);
-setInterval(tieShot, 7000)
+setInterval(putMeteor,1000);
+setInterval(tieShot, 1000)
 
 const render = function() {
 	requestAnimationFrame( render );
@@ -590,7 +590,7 @@ const render = function() {
 	
 	arrayShots.forEach((shot,index) => {
 		if(shot.t <= 1) {
-			shot.t += 0.02
+			shot.t += 0.2
 			shot.enemy = true;
 			shot.path.at(shot.t, where); 
 			shot.position.x = where.x;
@@ -659,7 +659,7 @@ const render = function() {
 			}
 			arrayShots.forEach((shot, indexShot) => {
 				shot.collider = new THREE.Box3().setFromObject(shot);
-				if(meteor.collider.intersectsBox(shot.collider)){
+				if(meteor.collider.intersectsBox(shot.collider) && !shot.enemy){
 					meteor.hp -= 50;
 					console.log(meteor.hp);
 					arrayShots.splice(indexShot, 1);
@@ -668,16 +668,16 @@ const render = function() {
 						scene.remove(meteor);
 						switch (meteor.type){
 							case 0:
-								score += 25;
+								score += 250;
 								break;
 							case 1:
-								score += 50;
+								score += 500;
 								break;
 							case 2:
-								score += 1000;
+								score += 10000;
 								break;
 							case 3:
-								score += 500;
+								score += 5000;
 								break;
 						}
 						meteors.splice(index, 1);
