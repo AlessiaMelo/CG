@@ -741,7 +741,7 @@ const render = function() {
 		if(loaded() && playing )score++;
 		document.getElementsByClassName("score")[0].innerHTML = score;
 
-    },  1000 / 30 );
+    },  1000 / 60 );
 	renderer.render( scene, camera );
 }
 
