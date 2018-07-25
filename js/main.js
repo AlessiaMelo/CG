@@ -2,19 +2,24 @@ let textCount = 0;
 let playing = false;
 let score = 0;
 let cameraPosition = 0;
+let startGame = 2500;
 
 $("#skipBtn").click(function(){
 	som.pause();
 	document.getElementById("title").style = "animation-iteration-count: 0";
 	document.getElementById("skipBtn").style.display = "none";
+	startGame = 800;
 	textCount = 800;
+	shipGroup.add(ship);	
+	mixers[0].stopAllAction();
 });
 
 $("#playAgainBtn").click(function(){	
 	document.getElementById("playAgainBtn").style.display = "none";
 	document.getElementById("gameOverInfo").style.display = "none";
 	window.addEventListener('mousedown', onMouseDown, false);
-	imperialSound.pause();  
+	imperialSound.pause(); 
+	startGame = 800; 
 	textCount = 800;
 	score = 0;
 	shipGroup.add(ship);	
@@ -360,7 +365,8 @@ let countDown = 0;
 let countLeft = 0;
 let countRight = 0;
 let rotationOffset = 0.0075
-//Checar numero das teclas
+
+
 const onKeydown = function(event){
 	switch(event.keyCode){
 		case 87:
@@ -720,10 +726,11 @@ const render = function() {
 		}
 	}	
 	
-	if(textCount == 800) 
+	if(textCount == startGame) 
 	{
 		ambientAudio.play();
-		playing = true;		
+		playing = true;	
+		document.getElementById("skipBtn").style.display = "none";	
 	}	
 	textCount++;
 	recoil++;
