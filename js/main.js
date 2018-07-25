@@ -492,6 +492,7 @@ const onMouseDown = function(){
 	let end = new THREE.Vector3(shipGroup.position.x + 0.5, shipGroup.position.y - 1, -250);
 	shot.path = new THREE.Line3(start, end);
 	shot.t = 0;
+	shot.enemy = false;
 	scene.add(shot);
 	arrayShots.push(shot);
 	
@@ -500,6 +501,7 @@ const onMouseDown = function(){
 	end = new THREE.Vector3(shipGroup.position.x - 0.5, shipGroup.position.y - 1, -250);
 	shot.path = new THREE.Line3(start, end);
 	shot.t = 0;
+	shot.enemy = false;
 	scene.add(shot);
 	arrayShots.push(shot);
 	blasts[blastIndex].volume = 0.2;
@@ -550,7 +552,7 @@ const putMeteor = function(){
 		newMeteor.type = meteorType;
 		meteors.push(newMeteor);
 		scene.add(newMeteor);
-		console.log(newMeteor.type);
+		//console.log(newMeteor.type);
 	}
 }
 
@@ -570,6 +572,7 @@ const tieShot = function(){
 				let end = new THREE.Vector3(shipGroup.position.x, shipGroup.position.y, shipGroup.position.z - 20)
 				shot.path = new THREE.Line3(start, end);
 				shot.t = 0;
+				shot.enemy = true;
 				scene.add(shot);
 				arrayShots.push(shot);
 				blasts[blastIndex].volume = 0.1;
@@ -599,8 +602,7 @@ const render = function() {
 	
 		arrayShots.forEach((shot,index) => {
 			if(shot.t <= 1) {
-				shot.t += 0.2
-				shot.enemy = true;
+				shot.t += 0.1;				
 				shot.path.at(shot.t, where); 
 				shot.position.x = where.x;
 				shot.position.y = where.y;
@@ -668,9 +670,7 @@ const render = function() {
 				}
 				arrayShots.forEach((shot, indexShot) => {
 					shot.collider = new THREE.Box3().setFromObject(shot);
-					if(meteor.collider.intersectsBox(shot.collider) && !shot.enemy){
-						//console.log("COLIDIU"+ meteor.hp +" - " +meteor.type);
-						alert("COLIDIU"+ meteor.hp +" - " +meteor.type);
+					if(meteor.collider.intersectsBox(shot.collider) && !shot.enemy ){
 						meteor.hp -= 50;
 						arrayShots.splice(indexShot, 1);
 						scene.remove(shot);
